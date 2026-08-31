@@ -28,9 +28,9 @@ Status: **In progress — frontend routes implemented; interaction and productio
 
 ## Research-backed decisions
 
-Baymard's 2026 product-page research identifies product pages as the centerpiece of ecommerce decision-making and recommends strong product imagery, in-scale imagery for worn accessories, clear purchase actions and accessible return information. Zorah's PDP therefore reserves a large gallery, a clear buy panel and expandable information sections. citeturn0search0turn0search9
+Baymard's 2026 product-page research identifies product pages as the centerpiece of ecommerce decision-making and recommends strong product imagery, in-scale imagery for worn accessories, clear purchase actions and accessible return information. Zorah's PDP therefore reserves a large gallery, a clear buy panel and expandable information sections.
 
-Zashadu's current Lagos-made storefront demonstrates the value of collection-led merchandising, local craft storytelling, editorial content and clear product sorting/filtering. Zorah adopts those information patterns without copying its visual identity. citeturn0search6turn0search10
+Zashadu's current Lagos-made storefront demonstrates the value of collection-led merchandising, local craft storytelling, editorial content and clear product sorting/filtering. Zorah adopts those information patterns without copying its visual identity.
 
 ## Phase boundary
 
