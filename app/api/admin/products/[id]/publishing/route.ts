@@ -6,7 +6,7 @@ const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]
 const ALLOWED=new Set(['draft','published','archived'])
 
 export async function PATCH(request:Request,{params}:{params:Promise<{id:string}>}){
-  const user=await requireRole(['catalog_admin']); const {id}=await params
+  const {user}=await requireRole(['catalog_admin']); const {id}=await params
   if(!UUID.test(id))return NextResponse.json({error:'Invalid product.'},{status:400})
   const body=await request.json().catch(()=>null)
   const status=body?.status
@@ -20,7 +20,7 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
   const {data:existing,error:findError}=await supabase.from('products').select('id,status').eq('id',id).single()
   if(findError||!existing)return NextResponse.json({error:'Product not found.'},{status:404})
   const now=new Date().toISOString()
-  const update:any={status,updated_by:user.id,updated_at:now}
+  const update:Record<string,unknown>={status,updated_by:user.id,updated_at:now}
   if(status==='published'&&!when){update.published_at=now;update.scheduled_publish_at=null;update.unpublished_at=null}
   else if(status==='draft'){update.scheduled_publish_at=when?.toISOString()??null;update.unpublished_at=now}
   else if(status==='archived'){update.scheduled_publish_at=null;update.unpublished_at=now}
