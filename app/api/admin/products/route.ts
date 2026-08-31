@@ -23,6 +23,7 @@ function payload(body:Record<string,unknown>):ParsedPayload{
 export async function POST(request:Request){
   try{
     const {user}=await requireRole(['catalog_admin'])
+    if(!user?.id) return jsonError('Authenticated user required.',401)
     if(!request.headers.get('content-type')?.toLowerCase().includes('application/json')) return jsonError('JSON request required.',415)
     let body:unknown; try{body=await request.json()}catch{return jsonError('Invalid JSON request.',400)}
     if(!body||typeof body!=='object'||Array.isArray(body))return jsonError('Invalid request.',400)
