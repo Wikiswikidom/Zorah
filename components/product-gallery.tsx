@@ -1,0 +1,5 @@
+"use client";
+import { useState } from "react";
+import type { Product } from "@/lib/catalog";
+const toneMap={brown:["#d6c0ad","#8c6045","#5a3524"],green:["#b9c8bf","#527669","#173d32"],ivory:["#eee9df","#d6cfc2","#9b9489"],black:["#b9b5ae","#5a5854","#242424"]};
+export function ProductGallery({product}:{product:Product}){const [active,setActive]=useState(0);const tones=toneMap[product.tone];return <div className={`product-gallery tone-${product.tone}`}><div className="gallery-main" style={{background:`linear-gradient(145deg,${tones[active]},#f7f3ec44)`}}><span>{active===0?"Front view":active===1?"Detail view":"Worn / scale view"}</span></div><div className="gallery-thumbs" role="tablist" aria-label={`${product.name} images`}>{tones.map((tone,i)=><button key={tone} className={active===i?"gallery-thumb is-active":"gallery-thumb"} onClick={()=>setActive(i)} style={{background:`linear-gradient(145deg,${tone},#f7f3ec44)`}} role="tab" aria-selected={active===i} aria-label={`View ${i+1}`}/>)}</div><p className="gallery-note">Product photography will replace these art-directed placeholders without changing the gallery interaction.</p></div>}
