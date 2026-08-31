@@ -11,9 +11,15 @@ export function generateStaticParams(){return products.map(product=>({slug:produ
 
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{
  const {slug}=await params
- const supabase=await createClient()
- const {data}=await supabase.from('products').select('name,short_description,description,seo_title,seo_description,seo_keywords,status').eq('slug',slug).eq('status','published').maybeSingle()
  const fallback=getProduct(slug)
+ let data:null | {name:string;short_description:string|null;description:string|null;seo_title:string|null;seo_description:string|null;seo_keywords:string[];status:string} = null
+ try {
+  const supabase=await createClient()
+  const result=await supabase.from('products').select('name,short_description,description,seo_title,seo_description,seo_keywords,status').eq('slug',slug).eq('status','published').maybeSingle()
+  data=result.data
+ } catch {
+  // Metadata must remain resilient during static builds or temporary backend outages.
+ }
  const name=data?.name??fallback?.name??'Zorah Handbags'
  const description=(data?.seo_description||data?.short_description||data?.description||fallback?.description||'Handcrafted leather handbags by Zorah.').slice(0,170)
  const title=(data?.seo_title||`${name} | Zorah Handbags`).slice(0,70)
