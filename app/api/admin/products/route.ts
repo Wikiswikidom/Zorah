@@ -7,7 +7,11 @@ const validSlug=(v:string)=>/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(v)
 const statuses=new Set(['draft','published','archived'])
 const jsonError=(message:string,status:number)=>NextResponse.json({error:message},{status})
 
-function payload(body:Record<string,unknown>){
+type ParsedPayload =
+  | { error: string; data?: never }
+  | { data: {name:string;slug:string;short_description:string;description:string;base_price:number;currency:'NGN';status:string;is_featured:boolean;badge:string|null;seo_title:string|null;seo_description:string|null;seo_keywords:string[]}; error?: never }
+
+function payload(body:Record<string,unknown>):ParsedPayload{
   const name=clean(body.name,160), slug=clean(body.slug,120), short_description=clean(body.short_description,500), description=clean(body.description,10000)
   const price=typeof body.base_price==='number'?body.base_price:Number(body.base_price)
   if(name.length<2||name.length>160||!validSlug(slug)||!Number.isFinite(price)||price<0||price>1000000000) return {error:'Please check the product name, slug and NGN price.'}
@@ -22,7 +26,7 @@ export async function POST(request:Request){
     if(!request.headers.get('content-type')?.toLowerCase().includes('application/json')) return jsonError('JSON request required.',415)
     let body:unknown; try{body=await request.json()}catch{return jsonError('Invalid JSON request.',400)}
     if(!body||typeof body!=='object'||Array.isArray(body))return jsonError('Invalid request.',400)
-    const parsed=payload(body as Record<string,unknown>); if('error'in parsed)return jsonError(parsed.error,400)
+    const parsed=payload(body as Record<string,unknown>); if('error' in parsed)return jsonError(parsed.error,400)
     const supabase=await createClient(); const {data,error}=await supabase.from('products').insert({...parsed.data,created_by:user.id,updated_by:user.id}).select('id').single()
     if(error){const status=error.code==='23505'?409:400;return jsonError(error.code==='23505'?'A product with this slug already exists.':'Could not create product.',status)}
     return NextResponse.json({id:data.id},{status:201})
