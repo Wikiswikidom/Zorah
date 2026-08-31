@@ -1,0 +1,20 @@
+# Notification Events
+
+Initial events:
+
+- WELCOME
+- PASSWORD_RESET
+- ORDER_PLACED
+- PAYMENT_SUCCESSFUL
+- PAYMENT_FAILED
+- ORDER_CONFIRMED
+- ORDER_PROCESSING
+- ORDER_SHIPPED
+- ORDER_DELIVERED
+- ORDER_CANCELLED
+- CUSTOM_ORDER_RECEIVED
+- CUSTOM_ORDER_UPDATED
+- REFUND_UPDATED
+- PROMOTION
+
+Each event defines recipient, channel eligibility, template, retry policy and deduplication key.
