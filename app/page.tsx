@@ -1,6 +1,7 @@
 import { SiteHeader } from "@/components/site-header";
 import { ProductCard } from "@/components/product-card";
 import { PromoSlot } from "@/components/promo-slot";
+import { createClient } from "@/lib/supabase/server";
 
 const products = [
   { name: "The Aurelia", price: "₦—", tone: "brown" as const },
@@ -9,11 +10,15 @@ const products = [
   { name: "The Classic", price: "₦—", tone: "black" as const },
 ];
 
-export default function Home() {
+const themes: Record<string,string> = { light:"bg-[#F7F3EC] text-[#111111]", ivory:"bg-[#F7F3EC] text-[#111111]", dark:"bg-[#111111] text-[#F7F3EC]", leather:"bg-[#5A3524] text-[#F7F3EC]", green:"bg-[#173D32] text-[#F7F3EC]" };
+
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: sections } = await supabase.from("landing_sections").select("section_key,section_type,eyebrow,title,body,primary_cta_label,primary_cta_href,secondary_cta_label,secondary_cta_href,theme,sort_order").eq("status","published").eq("is_enabled",true).order("sort_order").order("created_at");
+  const dynamicSections = sections ?? [];
   return <main id="top" className="site-shell">
     <SiteHeader />
-    <section className="hero" aria-labelledby="hero-title"><div className="hero-art" aria-hidden="true" /><div className="hero-content"><p className="eyebrow">The Zorah house · Lagos</p><h1 id="hero-title">Crafted to be carried.</h1><p className="hero-copy">Contemporary leather handbags shaped with intention, made for the rhythm of everyday life.</p><a className="button" href="/shop">Shop the collection →</a></div></section>
-    <PromoSlot eyebrow="The Zorah edit" title="A considered sale, never a noisy one." description="Campaigns, private offers and new drops can be managed from the Zorah admin workspace." cta="Explore" />
+    {dynamicSections.length ? dynamicSections.map(section => <section key={section.section_key} className={`section ${themes[section.theme] ?? themes.light}`} aria-labelledby={`${section.section_key}-title`}><div className="mx-auto max-w-6xl"><p className="eyebrow">{section.eyebrow}</p><h2 id={`${section.section_key}-title`} className="section-title">{section.title}</h2><p className="section-note">{section.body}</p><div className="mt-7 flex flex-wrap gap-3">{section.primary_cta_href&&section.primary_cta_label&&<a className={`button ${section.theme==='light'||section.theme==='ivory'?'button-dark':''}`} href={section.primary_cta_href}>{section.primary_cta_label} →</a>}{section.secondary_cta_href&&section.secondary_cta_label&&<a className="text-link" href={section.secondary_cta_href}>{section.secondary_cta_label} →</a>}</div></div></section>) : <><section className="hero" aria-labelledby="hero-title"><div className="hero-art" aria-hidden="true" /><div className="hero-content"><p className="eyebrow">The Zorah house · Lagos</p><h1 id="hero-title">Crafted to be carried.</h1><p className="hero-copy">Contemporary leather handbags shaped with intention, made for the rhythm of everyday life.</p><a className="button" href="/shop">Shop the collection →</a></div></section><PromoSlot eyebrow="The Zorah edit" title="A considered sale, never a noisy one." description="Campaigns, private offers and new drops can be managed from the Zorah admin workspace." cta="Explore" /></>}
     <section id="shop" className="section" aria-labelledby="shop-title"><div className="section-head"><h2 id="shop-title" className="section-title">The signature edit</h2><p className="section-note">A focused selection of leather pieces designed around form, function and quiet confidence.</p></div><div className="product-grid">{products.map((product) => <ProductCard key={product.name} {...product} />)}</div><div style={{ marginTop: 30 }}><a className="text-link" href="/shop">View all handbags →</a></div></section>
     <section id="story" className="craft" aria-labelledby="craft-title"><div className="craft-grid"><div className="craft-visual" role="img" aria-label="Editorial placeholder for Zorah leather craftsmanship photography" /><div className="craft-copy"><p className="eyebrow">The hand behind the bag</p><h2 id="craft-title" className="section-title">Made with patience.</h2><p>Zorah treats the handbag as an object to live with: considered proportions, tactile leather, useful interiors and details that reward a closer look.</p><a className="button" href="/our-story">Discover our story →</a></div></div></section>
     <section id="collections" className="section"><div className="section-head"><h2 className="section-title">Designed for the day.</h2><p className="section-note">From compact silhouettes to carry-everything shapes, discover pieces built around how you actually move.</p></div><div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 12 }}>{["Everyday", "Statement", "Custom"].map((name, index) => <a key={name} href={name === "Custom" ? "/custom-orders" : "/collections"} style={{ minHeight: 320, padding: 24, display: "flex", alignItems: "flex-end", background: ["#e5ddd1", "#5a3524", "#173d32"][index], color: index === 0 ? "#111" : "#f7f3ec" }}><span style={{ fontFamily: "var(--font-display), Georgia, serif", fontSize: 42 }}>{name} →</span></a>)}</div></section>
