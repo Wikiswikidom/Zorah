@@ -1,0 +1,44 @@
+import { NextResponse } from 'next/server'
+import { requireRole } from '@/lib/auth/authorization'
+import { createClient } from '@/lib/supabase/server'
+
+const uuid = (value: unknown) => typeof value === 'string' && /^[0-9a-f-]{36}$/i.test(value)
+const text = (value: unknown, max: number) => typeof value === 'string' ? value.trim().slice(0, max) : ''
+const fail = (message: string, status = 400) => NextResponse.json({ error: message }, { status })
+function parse(body: unknown) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return { error: 'Invalid request.' }
+  const b = body as Record<string, unknown>
+  const slot_key = text(b.slot_key, 80), title = text(b.title, 160), description = text(b.description, 1000), product_id = b.product_id
+  const sort_order = typeof b.sort_order === 'number' ? Math.floor(b.sort_order) : Number(b.sort_order ?? 0)
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slot_key)) return { error: 'Invalid slot key.' }
+  if (!uuid(product_id)) return { error: 'A valid product is required.' }
+  if (!Number.isSafeInteger(sort_order) || sort_order < 0 || sort_order > 10000) return { error: 'Invalid sort order.' }
+  const starts_at = b.starts_at ? new Date(String(b.starts_at)) : null, ends_at = b.ends_at ? new Date(String(b.ends_at)) : null
+  if ((starts_at && Number.isNaN(starts_at.getTime())) || (ends_at && Number.isNaN(ends_at.getTime()))) return { error: 'Invalid availability dates.' }
+  if (starts_at && ends_at && ends_at <= starts_at) return { error: 'End time must be after start time.' }
+  return { data: { slot_key, title: title || null, description: description || null, product_id, sort_order, is_enabled: b.is_enabled !== false, starts_at: starts_at?.toISOString() ?? null, ends_at: ends_at?.toISOString() ?? null } }
+}
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const { user } = await requireRole(['catalog_admin', 'marketing_admin', 'super_admin']); const { id } = await params
+    if (!user?.id || !uuid(id)) return fail('Invalid placement or authentication.', 401)
+    if (!request.headers.get('content-type')?.toLowerCase().includes('application/json')) return fail('JSON request required.', 415)
+    let body: unknown; try { body = await request.json() } catch { return fail('Invalid JSON request.') }
+    const parsed = parse(body); if ('error' in parsed) return fail(parsed.error)
+    const supabase = await createClient()
+    const { data: product } = await supabase.from('products').select('id,status').eq('id', parsed.data.product_id).maybeSingle()
+    if (!product || product.status !== 'published') return fail('Only published products can be merchandised.', 409)
+    const { error } = await supabase.from('merchandising_slots').update({ ...parsed.data, updated_by: user.id, updated_at: new Date().toISOString() }).eq('id', id)
+    if (error) return fail(error.code === '23505' ? 'A placement with this key already exists.' : 'Could not update placement.', error.code === '23505' ? 409 : 400)
+    return NextResponse.json({ ok: true })
+  } catch { return fail('Unable to update placement.', 500) }
+}
+export async function DELETE(_request: Request, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    await requireRole(['catalog_admin', 'marketing_admin', 'super_admin']); const { id } = await params
+    if (!uuid(id)) return fail('Invalid placement ID.')
+    const supabase = await createClient(); const { error } = await supabase.from('merchandising_slots').delete().eq('id', id)
+    if (error) return fail('Could not delete placement.', 400)
+    return NextResponse.json({ ok: true })
+  } catch { return fail('Unable to delete placement.', 500) }
+}
