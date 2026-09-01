@@ -1,0 +1,51 @@
+import { NextResponse } from 'next/server'
+import { requireRole } from '@/lib/auth/authorization'
+import { createClient } from '@/lib/supabase/server'
+
+const uuid = (value: unknown) => typeof value === 'string' && /^[0-9a-f-]{36}$/i.test(value)
+const text = (value: unknown, max: number) => typeof value === 'string' ? value.trim().slice(0, max) : ''
+const errorResponse = (message: string, status = 400) => NextResponse.json({ error: message }, { status })
+
+function parse(body: unknown) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return { error: 'Invalid request.' }
+  const b = body as Record<string, unknown>
+  const slot_key = text(b.slot_key, 80)
+  const title = text(b.title, 160)
+  const description = text(b.description, 1000)
+  const product_id = b.product_id
+  const sort_order = typeof b.sort_order === 'number' ? Math.floor(b.sort_order) : Number(b.sort_order ?? 0)
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slot_key)) return { error: 'Slot key must use lowercase letters, numbers and hyphens.' }
+  if (!Number.isSafeInteger(sort_order) || sort_order < 0 || sort_order > 10000) return { error: 'Invalid sort order.' }
+  if (!uuid(product_id)) return { error: 'A valid product is required.' }
+  const starts_at = b.starts_at ? new Date(String(b.starts_at)) : null
+  const ends_at = b.ends_at ? new Date(String(b.ends_at)) : null
+  if ((starts_at && Number.isNaN(starts_at.getTime())) || (ends_at && Number.isNaN(ends_at.getTime()))) return { error: 'Invalid availability dates.' }
+  if (starts_at && ends_at && ends_at <= starts_at) return { error: 'End time must be after start time.' }
+  return { data: { slot_key, title: title || null, description: description || null, product_id, sort_order, is_enabled: b.is_enabled !== false, starts_at: starts_at?.toISOString() ?? null, ends_at: ends_at?.toISOString() ?? null } }
+}
+
+export async function GET() {
+  try {
+    await requireRole(['catalog_admin', 'marketing_admin', 'super_admin'])
+    const supabase = await createClient()
+    const { data, error } = await supabase.from('merchandising_slots').select('id,slot_key,title,description,product_id,sort_order,is_enabled,starts_at,ends_at,created_at,updated_at,products(id,name,slug,status)').order('slot_key').order('sort_order')
+    if (error) return errorResponse('Could not load merchandising.', 500)
+    return NextResponse.json({ slots: data ?? [] })
+  } catch { return errorResponse('Unable to load merchandising.', 500) }
+}
+
+export async function POST(request: Request) {
+  try {
+    const { user } = await requireRole(['catalog_admin', 'marketing_admin', 'super_admin'])
+    if (!user?.id) return errorResponse('Authentication required.', 401)
+    if (!request.headers.get('content-type')?.toLowerCase().includes('application/json')) return errorResponse('JSON request required.', 415)
+    let body: unknown; try { body = await request.json() } catch { return errorResponse('Invalid JSON request.') }
+    const parsed = parse(body); if ('error' in parsed) return errorResponse(parsed.error)
+    const supabase = await createClient()
+    const { data: product } = await supabase.from('products').select('id,status').eq('id', parsed.data.product_id).maybeSingle()
+    if (!product || product.status !== 'published') return errorResponse('Only published products can be merchandised.', 409)
+    const { data, error } = await supabase.from('merchandising_slots').insert({ ...parsed.data, created_by: user.id, updated_by: user.id }).select('id').single()
+    if (error) return errorResponse(error.code === '23505' ? 'A placement with this key already exists.' : 'Could not create placement.', error.code === '23505' ? 409 : 400)
+    return NextResponse.json({ id: data.id }, { status: 201 })
+  } catch { return errorResponse('Unable to create placement.', 500) }
+}
