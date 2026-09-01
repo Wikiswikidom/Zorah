@@ -28,14 +28,16 @@ function parse(body: unknown) {
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { user } = await requireRole(['content_admin', 'marketing_admin']); if (!user?.id) return errorResponse('Authentication required.', 401)
+    const { user } = await requireRole(['content_admin', 'marketing_admin'])
+    const userId = user?.id
+    if (!userId) return errorResponse('Authentication required.', 401)
     const { id } = await params
     if (!/^[0-9a-f-]{36}$/i.test(id)) return errorResponse('Invalid section ID.')
     if (!request.headers.get('content-type')?.toLowerCase().includes('application/json')) return errorResponse('JSON request required.', 415)
     let body: unknown; try { body = await request.json() } catch { return errorResponse('Invalid JSON request.') }
     const parsed = parse(body); if ('error' in parsed) return errorResponse(parsed.error)
     const supabase = await createClient()
-    const { error } = await supabase.from('landing_sections').update({ ...parsed.data, updated_by: user.id, published_at: parsed.data.status === 'published' ? new Date().toISOString() : null }).eq('id', id)
+    const { error } = await supabase.from('landing_sections').update({ ...parsed.data, updated_by: userId, published_at: parsed.data.status === 'published' ? new Date().toISOString() : null }).eq('id', id)
     if (error) return errorResponse(error.code === '23505' ? 'A section with this key already exists.' : 'Could not update section.', error.code === '23505' ? 409 : 400)
     return NextResponse.json({ ok: true })
   } catch { return errorResponse('Unable to update landing section.', 500) }
