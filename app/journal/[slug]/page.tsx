@@ -1,0 +1,6 @@
+import { notFound } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
+
+export default async function StoryPage({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const supabase=await createClient();const {data:story}=await supabase.from('journal_articles').select('title,excerpt,body,category,published_at,seo_title,seo_description').eq('slug',slug).eq('status','published').single();if(!story)notFound();return <main className="page-shell"><article className="mx-auto max-w-3xl"><p className="eyebrow">{story.category||"Z' Stories"} · {story.published_at?new Date(story.published_at).getFullYear():''}</p><h1 className="page-title">{story.title}</h1>{story.excerpt&&<p className="page-lede">{story.excerpt}</p>}<div className="mt-10 whitespace-pre-wrap text-base leading-8 text-black/75">{story.body}</div></article></main>}
+
+export async function generateMetadata({params}:{params:Promise<{slug:string}>}){const {slug}=await params;const supabase=await createClient();const {data:story}=await supabase.from('journal_articles').select('title,excerpt,seo_title,seo_description').eq('slug',slug).eq('status','published').single();return {title:story?.seo_title||story?.title||'Zorah Journal',description:story?.seo_description||story?.excerpt||'Stories from Zorah.'}}
