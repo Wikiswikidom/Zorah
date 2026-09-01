@@ -23,12 +23,13 @@ function payload(body:Record<string,unknown>):ParsedPayload{
 export async function POST(request:Request){
   try{
     const {user}=await requireRole(['catalog_admin'])
-    if(!user?.id) return jsonError('Authenticated user required.',401)
+    const userId=user?.id
+    if(!userId) return jsonError('Authenticated user required.',401)
     if(!request.headers.get('content-type')?.toLowerCase().includes('application/json')) return jsonError('JSON request required.',415)
     let body:unknown; try{body=await request.json()}catch{return jsonError('Invalid JSON request.',400)}
     if(!body||typeof body!=='object'||Array.isArray(body))return jsonError('Invalid request.',400)
     const parsed=payload(body as Record<string,unknown>); if('error' in parsed)return jsonError(parsed.error,400)
-    const supabase=await createClient(); const {data,error}=await supabase.from('products').insert({...parsed.data,created_by:user.id,updated_by:user.id}).select('id').single()
+    const supabase=await createClient(); const {data,error}=await supabase.from('products').insert({...parsed.data,created_by:userId,updated_by:userId}).select('id').single()
     if(error){const status=error.code==='23505'?409:400;return jsonError(error.code==='23505'?'A product with this slug already exists.':'Could not create product.',status)}
     return NextResponse.json({id:data.id},{status:201})
   }catch{return jsonError('Unable to create product.',500)}
