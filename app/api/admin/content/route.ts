@@ -44,12 +44,13 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { user } = await requireRole(['content_admin', 'marketing_admin'])
-    if (!user?.id) return jsonError('Authentication required.', 401)
+    const userId = user?.id
+    if (!userId) return jsonError('Authenticated user required.', 401)
     if (!request.headers.get('content-type')?.toLowerCase().includes('application/json')) return jsonError('JSON request required.', 415)
     let body: unknown; try { body = await request.json() } catch { return jsonError('Invalid JSON request.') }
     const parsed = parse(body); if ('error' in parsed) return jsonError(parsed.error)
     const supabase = await createClient()
-    const { data, error } = await supabase.from('landing_sections').insert({ ...parsed.data, created_by: user.id, updated_by: user.id, published_at: parsed.data.status === 'published' ? new Date().toISOString() : null }).select('id').single()
+    const { data, error } = await supabase.from('landing_sections').insert({ ...parsed.data, created_by: userId, updated_by: userId, published_at: parsed.data.status === 'published' ? new Date().toISOString() : null }).select('id').single()
     if (error) return jsonError(error.code === '23505' ? 'A section with this key already exists.' : 'Could not create section.', error.code === '23505' ? 409 : 400)
     return NextResponse.json({ id: data.id }, { status: 201 })
   } catch { return jsonError('Unable to create landing section.', 500) }
