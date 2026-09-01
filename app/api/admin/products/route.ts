@@ -20,6 +20,16 @@ function payload(body:Record<string,unknown>):ParsedPayload{
   return {data:{name,slug,short_description,description,base_price:price,currency:'NGN',status,is_featured:body.is_featured===true,badge:clean(body.badge,40)||null,seo_title:clean(body.seo_title,70)||null,seo_description:clean(body.seo_description,170)||null,seo_keywords:keywords}}
 }
 
+export async function GET(request:Request){
+  try{
+    await requireRole(['catalog_admin','marketing_admin','content_admin','super_admin'])
+    const url=new URL(request.url); const limit=Math.min(Math.max(Number(url.searchParams.get('limit')||100),1),100)
+    const supabase=await createClient(); const {data,error}=await supabase.from('products').select('id,name,slug,status,base_price,currency,is_featured').order('name').limit(limit)
+    if(error)return jsonError('Could not load products.',500)
+    return NextResponse.json({products:data??[]})
+  }catch{return jsonError('Unable to load products.',500)}
+}
+
 export async function POST(request:Request){
   try{
     const {user}=await requireRole(['catalog_admin'])
