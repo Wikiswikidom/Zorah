@@ -38,7 +38,7 @@ export function EditorialMotion() {
         <div className="fashion-header-inner">
           <a href="#story" className="fashion-header-link">The house</a>
           <a href="#craft" className="fashion-header-link">Craft</a>
-          <a href="/" className="fashion-header-logo" aria-label="Zorah home"><img src="/brand/zorah-wordmark.svg" alt="Zorah" /></a>
+          <a href="/" className="fashion-header-logo" aria-label="Zorah home"><img src="/brand/zorah-logo.webp" alt="Zorah Handbags" /></a>
           <a href="/login" className="fashion-header-link">Account</a>
           <a href="/shop" className="fashion-header-shop">Shop <span>↗</span></a>
         </div>
@@ -111,7 +111,7 @@ export function EditorialMotion() {
         </section>
       </main>
 
-      <footer className="fashion-footer"><div><img src="/brand/zorah-wordmark.svg" alt="Zorah" /></div><div><span>Lagos · Nigeria</span><a href="/shop">Shop</a><a href="/login">Account</a><a href="/our-story">Our story</a></div><small>© {new Date().getFullYear()} Zorah Handbags</small></footer>
+      <footer className="fashion-footer"><div><img src="/brand/zorah-logo.webp" alt="Zorah Handbags" /></div><div><span>Lagos · Nigeria</span><a href="/shop">Shop</a><a href="/login">Account</a><a href="/our-story">Our story</a></div><small>© {new Date().getFullYear()} Zorah Handbags</small></footer>
     </div>
   );
 }
