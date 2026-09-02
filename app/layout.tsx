@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./commerce.css";
 import "./landing.css";
+import "./login.css";
+import "./account.css";
 import { Cormorant_Garamond, Open_Sans } from "next/font/google";
 import { CommerceProvider } from "@/components/commerce-provider";
 
@@ -9,8 +11,8 @@ const display = Cormorant_Garamond({ subsets: ["latin"], variable: "--font-displ
 const sans = Open_Sans({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Zorah — Crafted to be carried.",
-  description: "Contemporary leather handbags crafted with intention in Lagos.",
+  title: "Zorah Handbags — Crafted to be carried.",
+  description: "Contemporary leather handbags crafted in Lagos with a modern African point of view.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
