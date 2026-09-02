@@ -23,8 +23,12 @@ export async function adminPasswordSignIn(formData: FormData) {
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect(`/admin-login?error=invalid&next=${encodeURIComponent(next)}`)
-  const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).maybeSingle()
-  if (!profile?.is_active || !staffRoles.has(profile.role as StaffRole)) {
+
+  // Resolve staff access through a narrowly scoped SECURITY DEFINER RPC. This avoids
+  // relying on a self-referential RLS policy immediately after authentication while
+  // still requiring an authenticated session and an active non-customer role.
+  const { data: access, error: accessError } = await supabase.rpc('get_current_staff_access').maybeSingle()
+  if (accessError || !access?.is_active || !staffRoles.has(access.role as StaffRole)) {
     await supabase.auth.signOut()
     redirect(`/admin-login?error=not_staff&next=${encodeURIComponent(next)}`)
   }
