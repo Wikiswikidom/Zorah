@@ -1,0 +1,11 @@
+import Link from "next/link";
+import { requireRole } from "@/lib/auth/authorization";
+import { createClient } from "@/lib/supabase/server";
+
+export default async function AdminCustomersPage() {
+  await requireRole(["support_admin", "analytics_admin"]);
+  const supabase = await createClient();
+  const { data: profiles, error } = await supabase.from("profiles").select("id, full_name, role, is_active, created_at").order("created_at", { ascending: false });
+
+  return <main><header><div><div><Link href="/admin" className="font-serif text-2xl tracking-[.12em]">ZORAH</Link><p className="mt-1 text-[10px] uppercase tracking-[.25em]">Customer accounts</p></div><Link href="/admin" className="text-xs uppercase tracking-[.18em]">Admin overview</Link></div></header><section><div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end"><div><p className="zorah-dashboard-kicker">Commerce / accounts</p><h1 className="mt-3 text-5xl">Customers</h1><p className="zorah-dashboard-sub mt-4">Registered profiles and account status. Authentication credentials remain inside Supabase Auth and are never exposed through this workspace.</p></div></div><div className="mt-8 overflow-hidden rounded-2xl border bg-white"><div className="grid grid-cols-[1fr_auto_auto] gap-4 border-b border-black/10 px-5 py-3 text-[9px] font-bold uppercase tracking-[.14em] text-black/45"><span>Profile</span><span>Role</span><span>Status</span></div>{error?<p className="p-6 text-sm text-red-800">Customer accounts could not be loaded.</p>:profiles?.map(profile=><div key={profile.id} className="grid grid-cols-[1fr_auto_auto] items-center gap-4 border-b border-black/10 px-5 py-4 last:border-0"><div><p className="font-serif text-lg">{profile.full_name || "Zorah customer"}</p><p className="mt-1 text-[10px] text-black/40">Joined {new Date(profile.created_at).toLocaleDateString("en-NG", { dateStyle: "medium" })}</p></div><span className="text-[9px] uppercase tracking-[.12em] text-[#5A3524]">{profile.role.replaceAll("_", " ")}</span><span className={`text-[9px] uppercase tracking-[.12em] ${profile.is_active ? "text-[#173D32]" : "text-red-800"}`}>{profile.is_active ? "Active" : "Inactive"}</span></div>)}{!error&&!profiles?.length&&<p className="p-8 text-center text-sm text-black/55">No registered profiles yet.</p>}</div></section></main>;
+}
