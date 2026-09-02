@@ -1,6 +1,8 @@
 import { AdminShell } from '@/components/admin/admin-shell'
+import { requireStaff } from '@/lib/auth/authorization'
 import './admin.css'
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AdminShell>{children}</AdminShell>
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const { role } = await requireStaff()
+  return <AdminShell role={role}>{children}</AdminShell>
 }
