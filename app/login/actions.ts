@@ -10,6 +10,12 @@ function safeNextPath(value: FormDataEntryValue | null) {
   return value
 }
 
+function loginPath(next: string, error: string) {
+  const admin = next === '/admin' || next.startsWith('/admin/')
+  const path = admin ? '/admin/login' : '/login'
+  return `${path}?error=${error}&next=${encodeURIComponent(next)}`
+}
+
 async function requestOrigin() {
   const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
   if (configured) return configured
@@ -30,12 +36,11 @@ export async function signInWithPassword(formData: FormData) {
   const email = String(formData.get('email') ?? '').trim().toLowerCase()
   const password = String(formData.get('password') ?? '')
   const next = safeNextPath(formData.get('next'))
-
-  if (!email || !password || email.length > 320 || password.length > 1024) redirect(`/login?error=invalid&next=${encodeURIComponent(next)}`)
+  if (!email || !password || email.length > 320 || password.length > 1024) redirect(loginPath(next, 'invalid'))
 
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) redirect(`/login?error=${loginError(error)}&next=${encodeURIComponent(next)}`)
+  if (error) redirect(loginPath(next, loginError(error)))
 
   revalidatePath('/', 'layout')
   redirect(next)
@@ -46,26 +51,17 @@ export async function signUpWithPassword(formData: FormData) {
   const password = String(formData.get('password') ?? '')
   const fullName = String(formData.get('fullName') ?? '').trim().slice(0, 160)
   const next = safeNextPath(formData.get('next'))
-
   if (!email || !password || email.length > 320 || password.length < 10 || password.length > 1024) redirect(`/login?error=signup_invalid&next=${encodeURIComponent(next)}`)
-
   const origin = await requestOrigin()
   if (!origin) redirect(`/login?error=configuration&next=${encodeURIComponent(next)}`)
-
   const supabase = await createClient()
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { full_name: fullName }, emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` },
-  })
-
+  const { data, error } = await supabase.auth.signUp({ email, password, options: { data: { full_name: fullName }, emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}` } })
   if (error) {
     const message = error.message.toLowerCase()
     if (error.status === 429 || message.includes('rate limit')) redirect(`/login?error=signup_rate_limit&next=${encodeURIComponent(next)}`)
     if (message.includes('invalid') && message.includes('email')) redirect(`/login?error=signup_email_invalid&next=${encodeURIComponent(next)}`)
     redirect(`/login?error=signup_failed&next=${encodeURIComponent(next)}`)
   }
-
   revalidatePath('/', 'layout')
   if (data.session) redirect(next)
   redirect(`/login?message=check_email&next=${encodeURIComponent(next)}`)
@@ -74,18 +70,13 @@ export async function signUpWithPassword(formData: FormData) {
 export async function signInWithGoogle(formData: FormData) {
   const next = safeNextPath(formData.get('next'))
   const origin = await requestOrigin()
-  if (!origin) redirect(`/login?error=configuration&next=${encodeURIComponent(next)}`)
-
+  if (!origin) redirect(loginPath(next, 'configuration'))
   const supabase = await createClient()
-  const { data, error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`, queryParams: { access_type: 'offline', prompt: 'select_account' } },
-  })
-
+  const { data, error } = await supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`, queryParams: { access_type: 'offline', prompt: 'select_account' } } })
   if (error || !data.url) {
     const message = error?.message?.toLowerCase() || ''
-    if (message.includes('provider is not enabled')) redirect(`/login?error=google_provider&next=${encodeURIComponent(next)}`)
-    redirect(`/login?error=oauth&next=${encodeURIComponent(next)}`)
+    if (message.includes('provider is not enabled')) redirect(loginPath(next, 'google_provider'))
+    redirect(loginPath(next, 'oauth'))
   }
   redirect(data.url)
 }
