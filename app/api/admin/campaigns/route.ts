@@ -45,8 +45,7 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     const { user } = await requireRole(['marketing_admin'])
-    const userId = user?.id
-    if (!userId) return jsonError('Authentication required.', 401)
+    const userId = user.id
     if (!request.headers.get('content-type')?.toLowerCase().includes('application/json')) return jsonError('JSON request required.', 415)
     let body: unknown; try { body = await request.json() } catch { return jsonError('Invalid JSON request.') }
     const parsed = parse(body); if ('error' in parsed) return jsonError(parsed.error)
