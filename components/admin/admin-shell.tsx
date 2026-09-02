@@ -7,13 +7,12 @@ const groups = [
   { label: "Overview", items: [["Dashboard", "/admin", "DB"]] },
   { label: "Commerce", items: [["Orders", "/admin/orders", "OR"], ["Products", "/admin/products", "PR"], ["Collections", "/admin/collections", "CO"], ["Inventory", "/admin/inventory", "IN"], ["Customers", "/admin/customers", "CU"]] },
   { label: "Growth", items: [["Campaigns", "/admin/campaigns", "CA"], ["Merchandising", "/admin/merchandising", "ME"]] },
-  { label: "Content", items: [["Landing page", "/admin/content", "LP"], ["Journal", "/admin/journal", "JO"], ["Scheduling", "/admin/scheduling", "SC"] },
+  { label: "Content", items: [["Landing page", "/admin/content", "LP"], ["Journal", "/admin/journal", "JO"], ["Scheduling", "/admin/scheduling", "SC"]] },
   { label: "Governance", items: [["Audit trail", "/admin/audit", "AU"]] },
 ] as const;
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-
   return (
     <div className="zorah-admin-shell">
       <aside className="zorah-admin-sidebar">
