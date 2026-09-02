@@ -15,6 +15,8 @@ const STAFF_ROLES = new Set<StaffRole>([
   'super_admin','catalog_admin','order_admin','content_admin','marketing_admin','support_admin','analytics_admin','operations_admin',
 ])
 
+type StaffAccess = { role: StaffRole | string; is_active: boolean }
+
 export async function getAuthenticatedUser() {
   const supabase = await createClient()
   const { data, error } = await supabase.auth.getUser()
@@ -30,12 +32,19 @@ export async function requireStaff() {
     redirect('/admin-login?next=/admin')
     throw new Error('Authentication redirect did not complete')
   }
-  const { data: profile, error: profileError } = await supabase.from('profiles').select('role, is_active').eq('id', user.id).single()
-  if (profileError || !profile || !profile.is_active || !STAFF_ROLES.has(profile.role as StaffRole)) {
+
+  // profiles is intentionally protected by RLS. Use the narrowly scoped
+  // SECURITY DEFINER function for the current user's staff access instead of
+  // querying the protected table directly from the request client.
+  const { data: accessData, error: accessError } = await supabase.rpc('get_current_staff_access').maybeSingle()
+  const access = accessData as unknown as StaffAccess | null
+
+  if (accessError || !access?.is_active || !STAFF_ROLES.has(access.role as StaffRole)) {
     redirect('/admin-login?error=forbidden&next=/admin')
     throw new Error('Authorization redirect did not complete')
   }
-  return { user, role: profile.role as StaffRole }
+
+  return { user, role: access.role as StaffRole }
 }
 
 export async function requireRole(allowedRoles: StaffRole[]) {
