@@ -27,12 +27,12 @@ export async function requireStaff() {
   const { data: userData, error: userError } = await supabase.auth.getUser()
   const user = userData.user
   if (userError || !user) {
-    redirect('/admin/login?next=/admin')
+    redirect('/admin-login?next=/admin')
     throw new Error('Authentication redirect did not complete')
   }
   const { data: profile, error: profileError } = await supabase.from('profiles').select('role, is_active').eq('id', user.id).single()
   if (profileError || !profile || !profile.is_active || !STAFF_ROLES.has(profile.role as StaffRole)) {
-    redirect('/admin/login?error=forbidden&next=/admin')
+    redirect('/admin-login?error=forbidden&next=/admin')
     throw new Error('Authorization redirect did not complete')
   }
   return { user, role: profile.role as StaffRole }
@@ -41,7 +41,7 @@ export async function requireStaff() {
 export async function requireRole(allowedRoles: StaffRole[]) {
   const { user, role } = await requireStaff()
   if (!allowedRoles.includes(role) && role !== 'super_admin') {
-    redirect('/admin/login?error=forbidden&next=/admin')
+    redirect('/admin-login?error=forbidden&next=/admin')
     throw new Error('Authorization redirect did not complete')
   }
   return { user, role }
