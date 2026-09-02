@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 function safeNextPath(value: FormDataEntryValue | null) {
@@ -47,7 +48,12 @@ export async function signUpWithPassword(formData: FormData) {
 export async function signInWithGoogle(formData: FormData) {
   const next = safeNextPath(formData.get('next'))
   const supabase = await createClient()
-  const origin = process.env.NEXT_PUBLIC_SITE_URL
+  const configuredOrigin = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
+  const requestHeaders = await headers()
+  const forwardedProto = requestHeaders.get('x-forwarded-proto')?.split(',')[0]?.trim() || 'https'
+  const host = requestHeaders.get('x-forwarded-host') || requestHeaders.get('host')
+  const requestOrigin = host ? `${forwardedProto}://${host}` : ''
+  const origin = configuredOrigin || requestOrigin
 
   if (!origin) redirect('/login?error=configuration')
 
