@@ -1,9 +1,90 @@
-import { SiteHeader } from "@/components/site-header";
-import { ProductCard } from "@/components/product-card";
-import { PromoSlot } from "@/components/promo-slot";
-import { ActiveCampaigns } from "@/components/active-campaigns";
-import { MerchandisingRail } from "@/components/merchandising-rail";
-import { createClient } from "@/lib/supabase/server";
-const products=[{name:"The Aurelia",price:"₦—",tone:"brown" as const},{name:"The Zorah Tote",price:"₦—",tone:"green" as const},{name:"The Mini Edit",price:"₦—",tone:"ivory" as const},{name:"The Classic",price:"₦—",tone:"black" as const}];
-const themes:Record<string,string>={light:"bg-[#F7F3EC] text-[#111111]",ivory:"bg-[#F7F3EC] text-[#111111]",dark:"bg-[#111111] text-[#F7F3EC]",leather:"bg-[#5A3524] text-[#F7F3EC]",green:"bg-[#173D32] text-[#F7F3EC]"};
-export default async function Home(){const supabase=await createClient();const [{data:sections},{data:campaigns}]=await Promise.all([supabase.from("landing_sections").select("section_key,section_type,eyebrow,title,body,primary_cta_label,primary_cta_href,secondary_cta_label,secondary_cta_href,theme,sort_order").eq("status","published").eq("is_enabled",true).order("sort_order").order("created_at"),supabase.from("campaigns").select("id,title,message,cta_label,cta_href,campaign_type,starts_at,ends_at,show_countdown,discount_type,discount_value,priority").eq("status","live").in("placement",["landing","both"]).order("priority",{ascending:false}).limit(20)]);const now=Date.now();const activeCampaigns=(campaigns??[]).filter(c=>(!c.starts_at||new Date(c.starts_at).getTime()<=now)&&(!c.ends_at||new Date(c.ends_at).getTime()>now));const dynamicSections=sections??[];return <main id="top" className="site-shell"><SiteHeader/><ActiveCampaigns campaigns={activeCampaigns}/>{dynamicSections.length?dynamicSections.map(section=><section key={section.section_key} className={`section ${themes[section.theme]??themes.light}`} aria-labelledby={`${section.section_key}-title`}><div className="mx-auto max-w-6xl"><p className="eyebrow">{section.eyebrow}</p><h2 id={`${section.section_key}-title`} className="section-title">{section.title}</h2><p className="section-note">{section.body}</p><div className="mt-7 flex flex-wrap gap-3">{section.primary_cta_href&&section.primary_cta_label&&<a className={`button ${section.theme==='light'||section.theme==='ivory'?'button-dark':''}`} href={section.primary_cta_href}>{section.primary_cta_label} →</a>}{section.secondary_cta_href&&section.secondary_cta_label&&<a className="text-link" href={section.secondary_cta_href}>{section.secondary_cta_label} →</a>}</div></div></section>):<><section className="hero" aria-labelledby="hero-title"><div className="hero-art" aria-hidden="true"/><div className="hero-content"><p className="eyebrow">The Zorah house · Lagos</p><h1 id="hero-title">Crafted to be carried.</h1><p className="hero-copy">Contemporary leather handbags shaped with intention, made for the rhythm of everyday life.</p><a className="button" href="/shop">Shop the collection →</a></div></section><PromoSlot eyebrow="The Zorah edit" title="A considered sale, never a noisy one." description="Campaigns, private offers and new drops can be managed from the Zorah admin workspace." cta="Explore"/></>}<MerchandisingRail slotKey="featured"/><section id="shop" className="section" aria-labelledby="shop-title"><div className="section-head"><h2 id="shop-title" className="section-title">The signature edit</h2><p className="section-note">A focused selection of leather pieces designed around form, function and quiet confidence.</p></div><div className="product-grid">{products.map(product=><ProductCard key={product.name}{...product}/>)}</div><div style={{marginTop:30}}><a className="text-link" href="/shop">View all handbags →</a></div></section><section id="story" className="craft" aria-labelledby="craft-title"><div className="craft-grid"><div className="craft-visual" role="img" aria-label="Editorial placeholder for Zorah leather craftsmanship photography"/><div className="craft-copy"><p className="eyebrow">The hand behind the bag</p><h2 id="craft-title" className="section-title">Made with patience.</h2><p>Zorah treats the handbag as an object to live with: considered proportions, tactile leather, useful interiors and details that reward a closer look.</p><a className="button" href="/our-story">Discover our story →</a></div></div></section><section id="collections" className="section"><div className="section-head"><h2 className="section-title">Designed for the day.</h2><p className="section-note">From compact silhouettes to carry-everything shapes, discover pieces built around how you actually move.</p></div><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}>{["Everyday","Statement","Custom"].map((name,index)=><a key={name} href={name==="Custom"?"/custom-orders":"/collections"} style={{minHeight:320,padding:24,display:"flex",alignItems:"flex-end",background:["#e5ddd1","#5a3524","#173d32"][index],color:index===0?"#111":"#f7f3ec"}}><span style={{fontFamily:"var(--font-display), Georgia, serif",fontSize:42}}>{name} →</span></a>)}</div></section><section id="custom" className="section" style={{background:"var(--white)"}}><div className="section-head"><h2 className="section-title">Create your Zorah.</h2><p className="section-note">A future custom-order experience will let customers request silhouette, leather, colour, hardware and finishing details.</p></div><a className="button button-dark" href="/custom-orders">Start a custom request →</a></section><footer className="footer"><div className="footer-grid"><div><h2 className="footer-title">ZORAH<span className="wordmark-dot"/></h2><p>Contemporary leather handbags, crafted with intention.</p></div><div><p className="footer-label">Shop</p><div className="footer-links"><a href="/shop">All handbags</a><a href="/collections">Collections</a><a href="/custom-orders">Custom orders</a></div></div><div><p className="footer-label">House</p><div className="footer-links"><a href="/our-story">Our story</a><a href="/journal">Journal</a><a href="/help">Care & help</a></div></div><div><p className="footer-label">Help</p><div className="footer-links"><a href="/help">Delivery & returns</a><a href="/search">Search</a><a href="/cart">Bag</a></div></div></div><div className="footer-bottom"><span>© {new Date().getFullYear()} Zorah</span><span>Lagos · Nigeria</span></div></footer></main>}
+import { LandingThemeToggle } from "@/components/landing/theme-toggle";
+import { ThreeBagStory } from "@/components/landing/three-bag-story";
+
+export default function Home() {
+  return (
+    <main className="landing-page" id="top">
+      <header className="landing-header">
+        <nav className="landing-nav" aria-label="Zorah landing navigation">
+          <div className="landing-nav-left">
+            <a href="#story">The house</a>
+            <a href="#craft">Craft</a>
+          </div>
+          <a href="/" aria-label="Zorah home"><img className="landing-logo" src="/brand/zorah-wordmark.svg" alt="Zorah" /></a>
+          <div className="landing-nav-right">
+            <a href="/login">Sign in</a>
+            <a className="landing-pill" href="/shop">Enter shop <span aria-hidden="true">↗</span></a>
+            <LandingThemeToggle />
+          </div>
+        </nav>
+      </header>
+
+      <section className="landing-hero" aria-labelledby="landing-title">
+        <div className="landing-hero-inner">
+          <div className="landing-hero-copy">
+            <span className="landing-kicker">The Zorah house · Lagos · 2026</span>
+            <h1 id="landing-title">Carry <em>your</em> story.</h1>
+            <p className="landing-hero-lede">Zorah makes contemporary leather handbags with a Lagos point of view—quiet in attitude, considered in every detail, and designed for the rhythm of real life.</p>
+            <div className="landing-actions">
+              <a className="landing-button landing-button--solid" href="/shop">Enter the collection</a>
+              <a className="landing-button" href="#story">Discover Zorah</a>
+            </div>
+          </div>
+          <div className="landing-hero-art" aria-hidden="true" />
+        </div>
+        <div className="landing-scroll-cue"><span /> Scroll to enter the story</div>
+      </section>
+
+      <ThreeBagStory />
+
+      <section id="story" className="landing-editorial">
+        <div className="landing-editorial-inner">
+          <p className="landing-overline">The house</p>
+          <h2 className="landing-editorial-title">Not made to shout.<br /><em>Made to stay.</em></h2>
+          <div className="landing-editorial-grid">
+            <p className="landing-editorial-copy">Zorah sits at the meeting point of craft and contemporary life. We make leather handbags that feel beautiful in the hand, useful in the day, and unmistakably themselves. Every silhouette begins with how it will be carried—not simply how it will be photographed.</p>
+            <div className="landing-stat-list" aria-label="Zorah principles">
+              <div className="landing-stat"><span>Point of view</span><strong>Lagos</strong></div>
+              <div className="landing-stat"><span>Approach</span><strong>Considered</strong></div>
+              <div className="landing-stat"><span>Material</span><strong>Leather</strong></div>
+              <div className="landing-stat"><span>Purpose</span><strong>Every day</strong></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="craft" className="landing-green">
+        <div className="landing-green-grid">
+          <div><p className="landing-kicker">The hand behind the bag</p><h2>Craft is the quiet part you feel.</h2></div>
+          <div className="landing-green-copy">
+            <p><strong>We design around use.</strong> The weight of a handle. The opening of a zip. The pocket you reach for without thinking. The way leather changes with time.</p>
+            <p>That is why the details matter. Zorah brings structure, proportion and tactile material together so the finished piece feels effortless—not overworked.</p>
+            <div className="landing-chip-row"><span className="landing-chip">Leather</span><span className="landing-chip">Hand finished</span><span className="landing-chip">Lagos</span><span className="landing-chip">Built to live with</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="landing-editorial" aria-labelledby="journey-title">
+        <div className="landing-editorial-inner">
+          <p className="landing-overline">A slower way to shop</p>
+          <h2 id="journey-title" className="landing-editorial-title">Meet the bag.<br /><em>Then make it yours.</em></h2>
+          <div className="landing-editorial-grid">
+            <p className="landing-editorial-copy">The story ends where shopping begins. Explore the collection by silhouette, discover the details inside each piece, save what you love, and move into a focused checkout when you are ready.</p>
+            <div className="landing-actions"><a className="landing-button landing-button--solid" style={{ background: "#111", color: "#f7f3ec", borderColor: "#111" }} href="/shop">Shop Zorah</a><a className="landing-button" style={{ color: "#111", borderColor: "#111" }} href="/login">Sign in / create account</a></div>
+          </div>
+        </div>
+      </section>
+
+      <section className="landing-final">
+        <div className="landing-final-content">
+          <p className="landing-overline">Zorah · Lagos</p>
+          <h2>The next chapter is yours to carry.</h2>
+          <p>Enter the Zorah shop for the current collection, campaigns, collections and product experience.</p>
+          <div className="landing-actions" style={{ justifyContent: "center" }}><a className="landing-button landing-button--solid" href="/shop">Enter the shop →</a><a className="landing-button" href="/our-story">Our story</a></div>
+        </div>
+      </section>
+
+      <footer className="landing-footer"><span>© {new Date().getFullYear()} Zorah</span><span>Lagos · Nigeria</span><span><a href="/login">Sign in</a> · <a href="/shop">Shop</a></span></footer>
+    </main>
+  );
+}
