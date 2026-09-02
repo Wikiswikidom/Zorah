@@ -8,7 +8,7 @@ const groups = [
   { label: "Commerce", items: [["Orders", "/admin/orders", "OR"], ["Products", "/admin/products", "PR"], ["Collections", "/admin/collections", "CO"], ["Inventory", "/admin/inventory", "IN"], ["Customers", "/admin/customers", "CU"]] },
   { label: "Growth", items: [["Campaigns", "/admin/campaigns", "CA"], ["Merchandising", "/admin/merchandising", "ME"]] },
   { label: "Content", items: [["Landing page", "/admin/content", "LP"], ["Journal", "/admin/journal", "JO"], ["Scheduling", "/admin/scheduling", "SC"]] },
-  { label: "Governance", items: [["Audit trail", "/admin/audit", "AU"]] },
+  { label: "Governance", items: [["Team & permissions", "/admin/team", "TM"], ["Audit trail", "/admin/audit", "AU"]] },
 ] as const;
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
