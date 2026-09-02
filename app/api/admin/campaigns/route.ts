@@ -49,8 +49,9 @@ export async function POST(request: Request) {
     if (!request.headers.get('content-type')?.toLowerCase().includes('application/json')) return jsonError('JSON request required.', 415)
     let body: unknown; try { body = await request.json() } catch { return jsonError('Invalid JSON request.') }
     const parsed = parse(body); if (!('data' in parsed)) return jsonError(parsed.error)
+    const parsedData = parsed.data; if (!parsedData) return jsonError('Invalid campaign payload.', 500)
     const supabase = await createClient()
-    const { data, error } = await supabase.from('campaigns').insert({ ...parsed.data, created_by: userId, updated_by: userId, published_at: parsed.data.status === 'live' ? new Date().toISOString() : null }).select('id').single()
+    const { data, error } = await supabase.from('campaigns').insert({ ...parsedData, created_by: userId, updated_by: userId, published_at: parsedData.status === 'live' ? new Date().toISOString() : null }).select('id').single()
     if (error) return jsonError(error.code === '23505' ? 'A campaign with this slug already exists.' : 'Could not create campaign.', error.code === '23505' ? 409 : 400)
     return NextResponse.json({ id: data.id }, { status: 201 })
   } catch { return jsonError('Unable to create campaign.', 500) }
