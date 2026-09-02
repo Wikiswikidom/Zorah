@@ -6,6 +6,8 @@ import { StaffRole } from '@/lib/auth/authorization'
 
 const staffRoles = new Set<StaffRole>(['super_admin','catalog_admin','order_admin','content_admin','marketing_admin','support_admin','analytics_admin','operations_admin'])
 
+type StaffAccess = { is_active: boolean; role: StaffRole | string }
+
 function safeNext(value: FormDataEntryValue | null) {
   const next = String(value || '/admin')
   return next.startsWith('/') && !next.startsWith('//') ? next : '/admin'
@@ -24,10 +26,11 @@ export async function adminPasswordSignIn(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect(`/admin-login?error=invalid&next=${encodeURIComponent(next)}`)
 
-  // Resolve staff access through a narrowly scoped SECURITY DEFINER RPC. This avoids
-  // relying on a self-referential RLS policy immediately after authentication while
-  // still requiring an authenticated session and an active non-customer role.
-  const { data: access, error: accessError } = await supabase.rpc('get_current_staff_access').maybeSingle()
+  // The RPC is intentionally narrow: it reads only the current authenticated user's
+  // staff access. The explicit cast gives TypeScript the contract because generated
+  // Supabase database types do not currently include this RPC.
+  const { data: accessData, error: accessError } = await supabase.rpc('get_current_staff_access').maybeSingle()
+  const access = accessData as unknown as StaffAccess | null
   if (accessError || !access?.is_active || !staffRoles.has(access.role as StaffRole)) {
     await supabase.auth.signOut()
     redirect(`/admin-login?error=not_staff&next=${encodeURIComponent(next)}`)
