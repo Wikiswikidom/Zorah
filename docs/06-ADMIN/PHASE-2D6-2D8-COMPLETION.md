@@ -23,7 +23,20 @@
 - Availability windows.
 - Admin UI for creating, editing and deleting placements.
 - Storefront merchandising rail for active placements.
+- Homepage merchandising placement integration.
 - Customer-visible placements remain limited to enabled, in-window, published products.
+
+## 2026-09-02 verification pass
+
+- Re-verified the dedicated Zorah Supabase project and its public catalogue/content tables.
+- Confirmed RLS is enabled on the relevant commerce, campaign, CMS, journal and merchandising tables.
+- Supabase Security Advisor: **0 security lints**.
+- Found two performance-policy overlaps during verification and corrected them:
+  - merged public/staff SELECT rules for `journal_articles`;
+  - merged public/staff SELECT rules for `landing_sections`;
+  - split the Journal staff `ALL` policy into explicit INSERT/UPDATE/DELETE policies so SELECT is not evaluated twice;
+  - added missing `landing_sections.created_by` and `landing_sections.updated_by` foreign-key indexes.
+- Supabase performance notices that remain are informational unused-index observations; they are not security findings and can be evaluated after real production query traffic exists.
 
 ## Security decisions
 
@@ -36,12 +49,7 @@
 - Supabase service-role/secret credentials must remain server-side.
 - Public reads expose only active campaign/merchandising data allowed by RLS.
 - Customer authentication does not grant administrative permissions.
-
-## Database security verification
-
-The Zorah Supabase Security Advisor was rechecked after the policy changes: **0 security lints**.
-
-RLS policy overlap was also reduced for campaign and merchandising tables. Performance advisor output may still contain informational unused-index/foreign-key recommendations elsewhere in the project; these are optimization items, not security findings.
+- Promotional metadata cannot be treated as authoritative checkout pricing.
 
 ## Deliberate phase boundaries
 
@@ -51,6 +59,12 @@ RLS policy overlap was also reduced for campaign and merchandising tables. Perfo
 
 ## QA gate
 
-The implementation has been reviewed for authorization boundaries, input validation, RLS policy design and storefront visibility. The repository's automated quality workflow remains the authoritative TypeScript/build/dependency gate when a workflow run is available.
+The 2D-6 and 2D-8 feature implementation is present in the repository and the Supabase security configuration has been rechecked. The repository's automated quality workflow remains the authoritative TypeScript/build/dependency gate when a workflow run is available.
 
-Do not mark production-ready solely because the admin UI renders; run the complete build and integration/security test suite before launch.
+A successful security-advisor result does **not** mean the application is impossible to hack. Before launch, run the full build, integration tests, authentication/RBAC abuse tests, storage tests, checkout security tests and production penetration/security review.
+
+## Status
+
+- **2D-6 — Ads/Campaigns/Flash Sales: implementation complete; production/build gate pending.**
+- **2D-8 — Merchandising: implementation complete; production/build gate pending.**
+- **2D-7 — Journal: implementation complete; richer media workflow remains a later enhancement if required by the project roadmap.**
