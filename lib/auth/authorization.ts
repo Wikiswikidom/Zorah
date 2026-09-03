@@ -33,8 +33,14 @@ export async function requireStaff() {
     redirect('/admin-login?next=/admin')
     throw new Error('Authentication redirect did not complete')
   }
-  const { data: accessData, error: accessError } = await supabase.rpc('get_current_staff_access').maybeSingle()
-  const access = accessData as unknown as StaffAccess | null
+
+  // Read only the caller's own profile. RLS keeps privileged role data protected.
+  const { data: accessData, error: accessError } = await supabase
+    .from('profiles')
+    .select('role,is_active')
+    .eq('id', user.id)
+    .maybeSingle()
+  const access = accessData as StaffAccess | null
   if (accessError || !access?.is_active || !STAFF_ROLES.has(access.role as StaffRole)) {
     redirect('/admin-login?error=forbidden&next=/admin')
     throw new Error('Authorization redirect did not complete')
