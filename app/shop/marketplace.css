@@ -1,0 +1,35 @@
+.shop-page{background:#f1f1f1!important;max-width:none!important;padding:12px 14px 90px!important}
+.shop-page .page-intro{max-width:1400px;margin:0 auto 12px;padding:16px 18px;background:#fff;border:1px solid #e2e2e2}
+.shop-page .page-intro .eyebrow{font-size:10px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:.12em}
+.shop-page .page-title{font-family:var(--font-sans),Arial,sans-serif!important;font-size:27px!important;font-weight:700!important;letter-spacing:-.02em!important}
+.shop-page .page-lede{font-size:12px;line-height:1.55;color:rgba(17,17,17,.55)}
+.shop-page .active-campaigns{max-width:1400px;margin:0 auto 12px}
+.zorah-storefront{max-width:1400px;margin:0 auto}
+.zorah-store-search{grid-template-columns:38px minmax(0,1fr) auto!important;gap:0!important;padding:0!important;border-radius:4px!important;overflow:hidden!important;border:1px solid #ddd!important;box-shadow:0 1px 4px rgba(0,0,0,.05)!important}
+.zorah-store-search>span{display:grid!important;place-items:center;font-size:23px;color:#555}
+.zorah-store-search input{height:50px!important;border:0!important;border-radius:0!important;background:#fff!important;font-size:13px!important;padding:0 8px!important}
+.zorah-store-search input:focus{box-shadow:none!important}
+.zorah-search-submit{height:50px!important;border-radius:0!important;padding:0 25px!important;background:var(--green)!important}
+.zorah-category-strip{border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.zorah-store-layout{grid-template-columns:230px minmax(0,1fr)!important;gap:14px!important}
+.zorah-store-sidebar{border-radius:3px!important;padding:16px!important;box-shadow:0 1px 4px rgba(0,0,0,.04);top:132px}
+.zorah-store-results{min-width:0}
+.zorah-results-toolbar{border-radius:3px!important;box-shadow:0 1px 4px rgba(0,0,0,.04);padding:13px 15px!important}
+.zorah-product-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:12px!important}
+.zorah-product-grid .product-card{border-radius:3px!important;overflow:hidden;box-shadow:0 1px 5px rgba(0,0,0,.06);border:0!important}
+.zorah-product-grid .product-card:hover{transform:none;box-shadow:0 4px 14px rgba(0,0,0,.1)}
+.zorah-product-grid .product-media-wrap{position:relative}
+.zorah-product-grid .product-media{aspect-ratio:1/1.08!important;background:#eee!important}
+.zorah-product-grid .product-media img{transition:transform .25s ease}
+.zorah-product-grid .product-card:hover .product-media img{transform:scale(1.025)}
+.zorah-product-grid .product-info{padding:12px 12px 14px!important}
+.zorah-product-grid .product-name{font-size:12px!important;font-weight:500!important;min-height:34px!important;color:#222}
+.zorah-product-grid .product-category{font-size:9px!important;color:#888!important}
+.zorah-product-grid .product-price{font-size:16px!important;font-weight:700!important;margin-top:7px!important}
+.zorah-product-grid .product-availability{font-size:9px!important;color:#777!important}
+.zorah-product-grid .product-add{height:38px;margin-top:10px!important;border-radius:3px!important;font-size:9px!important;background:var(--green)!important}
+.zorah-product-grid .wishlist-button{border-radius:50%!important;box-shadow:0 1px 5px rgba(0,0,0,.1)}
+.zorah-product-grid .product-badge{border-radius:2px!important;background:var(--gold)!important}
+.shop-page .empty-state{border-radius:3px!important}
+@media(max-width:1050px){.zorah-product-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:760px){.shop-page{padding:8px 8px 82px!important}.shop-page .page-intro{padding:13px 12px;margin-bottom:8px}.shop-page .page-title{font-size:22px!important}.zorah-store-search{grid-template-columns:32px minmax(0,1fr) auto!important;top:58px!important}.zorah-store-search input{height:44px!important}.zorah-search-submit{height:44px!important;padding:0 15px!important}.zorah-category-strip{margin-bottom:8px}.zorah-category-strip a,.zorah-category-strip button{padding:11px 14px!important}.zorah-results-toolbar{margin-bottom:8px!important}.zorah-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px!important}.zorah-product-grid .product-info{padding:9px 9px 11px!important}.zorah-product-grid .product-name{font-size:11px!important}.zorah-product-grid .product-price{font-size:14px!important}.zorah-product-grid .product-add{height:35px!important;margin-top:8px!important}}
