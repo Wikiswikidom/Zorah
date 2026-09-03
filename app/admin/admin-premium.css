@@ -1,0 +1,46 @@
+/* Zorah admin workspace: high-density commerce operations with editorial polish. */
+.zorah-admin-shell{--workspace:#f2f2ef;--panel:#fff;--line:rgba(17,17,17,.09);--muted:rgba(17,17,17,.55);--green:#173d32;--gold:#b08a3c;background:var(--workspace)}
+.zorah-admin-sidebar{box-shadow:10px 0 30px rgba(0,0,0,.08)}
+.zorah-admin-nav{scrollbar-width:thin}
+.zorah-admin-nav-link{min-height:42px}
+.zorah-admin-nav-link.is-active{font-weight:700}
+.zorah-admin-main main>header{box-shadow:0 2px 14px rgba(17,17,17,.045)}
+.zorah-admin-main main>section{padding-top:34px!important}
+.zorah-admin-main .zorah-dashboard-hero{background:linear-gradient(135deg,rgba(23,61,50,.05),rgba(176,138,60,.035));padding:28px;border:1px solid var(--line);border-radius:16px}
+.zorah-admin-main .zorah-dashboard-hero h1{font-size:clamp(38px,5vw,60px)!important}
+.zorah-admin-main .zorah-dashboard-stat{min-height:128px;display:flex;flex-direction:column;justify-content:center}
+.zorah-admin-main .zorah-dashboard-stat strong{font-size:36px}
+.zorah-admin-main .zorah-dashboard-panel{box-shadow:0 5px 22px rgba(17,17,17,.035)}
+.zorah-admin-main .zorah-dashboard-module{min-height:105px;align-items:flex-start}
+.zorah-admin-main .zorah-dashboard-module:after{content:"";display:block}
+/* Product centre */
+.zorah-admin-main .zorah-product-centre{background:var(--workspace)!important}
+.zorah-admin-main .product-centre-content{padding-top:28px!important}
+.zorah-admin-main .product-centre-hero{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px 26px}
+.zorah-admin-main .product-centre-hero h1{font-size:clamp(38px,5vw,56px)!important}
+.zorah-admin-main .add-product-button{border-radius:7px;min-height:46px;padding:0 18px;box-shadow:0 6px 16px rgba(23,61,50,.12)}
+.zorah-admin-main .product-centre-stats{gap:9px}
+.zorah-admin-main .product-centre-stats>div{border-radius:11px;box-shadow:0 3px 14px rgba(17,17,17,.025)}
+.zorah-admin-main .product-centre-toolbar{border-radius:11px;box-shadow:none;padding:7px}
+.zorah-admin-main .product-list-card{border-radius:14px;overflow:hidden;box-shadow:0 5px 22px rgba(17,17,17,.035)}
+.zorah-admin-main .product-list-heading{padding:18px 20px;background:#fff}
+.zorah-admin-main .catalogue-table{overflow-x:auto}
+.zorah-admin-main .catalogue-table-head,.zorah-admin-main .catalogue-row{min-width:900px}
+.zorah-admin-main .catalogue-row{transition:background .15s ease}
+.zorah-admin-main .catalogue-row:hover{background:#fbfaf7}
+.zorah-admin-main .catalogue-actions a,.zorah-admin-main .catalogue-actions button{border-radius:6px}
+.zorah-admin-main .publishing-help{border:1px solid var(--line);border-radius:11px;background:#fff;padding:14px 16px}
+/* Product editor */
+.zorah-admin-main .zorah-product-editor{max-width:1240px!important}
+.zorah-admin-main .zorah-product-editor .editor-head{padding:8px 0 20px}
+.zorah-admin-main .zorah-product-editor .editor-title{font-size:clamp(34px,4vw,48px)!important}
+.zorah-admin-main .zorah-product-editor form section{border-radius:14px!important;box-shadow:0 5px 20px rgba(17,17,17,.035)}
+.zorah-admin-main .zorah-product-editor form section .product-form-head{border-bottom:1px solid var(--line);padding-bottom:14px}
+.zorah-admin-main .zorah-product-editor form section .product-form-head p{color:var(--gold)!important;text-transform:uppercase;letter-spacing:.16em;font-weight:700}
+.zorah-admin-main .zorah-product-editor form section .product-form-head span{display:block;margin-top:5px;color:var(--muted);font-size:12px}
+.zorah-admin-main .zorah-product-editor .media-card>section{border-radius:14px!important;box-shadow:0 5px 20px rgba(17,17,17,.035)}
+.zorah-admin-main .zorah-product-editor .media-card img{background:#eee9df}
+.zorah-admin-main .zorah-product-editor form>div:last-child{margin-top:4px!important}
+/* Mobile: keep the workspace usable without horizontal page overflow. */
+@media(max-width:850px){.zorah-admin-sidebar{display:none}.zorah-admin-main{margin-left:0}.zorah-admin-mobilebar{display:flex;position:sticky;top:0;z-index:50;align-items:center;justify-content:space-between;gap:10px;background:var(--green);color:#f7f3ec;padding:13px 15px;box-shadow:0 3px 14px rgba(0,0,0,.12)}.zorah-admin-mobilebar .zorah-admin-wordmark{font-size:22px}.zorah-admin-mobile-role{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:rgba(247,243,236,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.zorah-admin-mobile-store{font-size:8px;text-transform:uppercase;letter-spacing:.08em;color:#f7f3ec}.zorah-admin-main main>section{padding:24px 18px!important}.zorah-admin-main .zorah-dashboard-hero{padding:20px}.zorah-admin-main .zorah-dashboard-actions a{flex:1}.zorah-admin-main .zorah-dashboard-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.zorah-admin-main .zorah-product-editor{padding:20px 14px 80px!important}.zorah-admin-main .product-centre-content{padding:16px 14px 70px!important}.zorah-admin-main .product-centre-hero{align-items:stretch;flex-direction:column;padding:18px}.zorah-admin-main .product-centre-hero .add-product-button{width:100%}.zorah-admin-main .product-centre-stats{grid-template-columns:repeat(2,1fr)}.zorah-admin-main .product-centre-toolbar{overflow:hidden}.zorah-admin-main .zorah-product-editor .editor-head{align-items:flex-start}.zorah-admin-main .zorah-product-editor form section{padding:18px!important}.zorah-admin-main .zorah-product-editor form section>div:not(:first-child){gap:13px}.zorah-admin-main .zorah-product-editor form>div:last-child{margin-left:-14px!important;margin-right:-14px!important;padding-left:14px!important;padding-right:14px!important}.zorah-admin-main .catalogue-actions{justify-content:flex-start}}
+@media(max-width:520px){.zorah-admin-main .zorah-dashboard-stats{grid-template-columns:1fr}.zorah-admin-main .zorah-dashboard-analytics{gap:9px}.zorah-admin-main .zorah-dashboard-panel{padding:16px}.zorah-admin-main .zorah-role-bars{grid-template-columns:1fr}.zorah-admin-main .product-centre-stats{grid-template-columns:1fr 1fr}.zorah-admin-main .product-centre-hero h1{font-size:38px!important}.zorah-admin-main .editor-title{font-size:30px!important}.zorah-admin-mobile-role{display:none}}
