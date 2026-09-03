@@ -6,7 +6,7 @@ type Item=[string,string,string];
 const groups:{label:string;items:Item[]}[]=[
   {label:"Overview",items:[["Dashboard","/admin","DB"]]},
   {label:"Commerce",items:[["Orders","/admin/orders","OR"],["Products","/admin/products","PR"],["Categories","/admin/categories","CT"],["Collections","/admin/collections","CO"],["Inventory","/admin/inventory","IN"],["Customers","/admin/customers","CU"],["Waitlist","/admin/waitlist","WL"]]},
-  {label:"Growth",items:[["Campaigns","/admin/campaigns","CA"],["Merchandising","/admin/merchandising","ME"]]},
+  {label:"Growth",items:[["Campaigns","/admin/campaigns","CA"],["Merchandising","/admin/merchandising","ME"]},
   {label:"Content",items:[["Landing page","/admin/content","LP"],["Journal","/admin/journal","JO"],["Scheduling","/admin/scheduling","SC"]]},
   {label:"Support",items:[["Enquiries","/admin/enquiries","EN"]]},
   {label:"Governance",items:[["Team & permissions","/admin/team","TM"],["Security","/admin/security","SE"],["Audit trail","/admin/audit","AU"]]},
