@@ -1,5 +1,6 @@
 import { EditorialMotion } from "@/components/landing/editorial-motion";
 import { createClient } from "@/lib/supabase/server";
+import "./landing-cms.css";
 
 export default async function Home() {
   const media: Record<string,string> = {};
