@@ -1,3 +1,7 @@
-import CmsHome from "@/components/landing/cms-home";
-export const dynamic="force-dynamic";
-export default function Home(){return <CmsHome/>}
+import StorefrontHome from "@/components/landing/storefront-home";
+
+export const dynamic = "force-dynamic";
+
+export default function Home() {
+  return <StorefrontHome />;
+}
