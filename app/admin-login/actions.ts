@@ -4,7 +4,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { StaffRole } from '@/lib/auth/authorization'
 
-const staffRoles = new Set<StaffRole>(['super_admin','catalog_admin','order_admin','content_admin','marketing_admin','support_admin','analytics_admin','operations_admin'])
+const staffRoles = new Set<StaffRole>(['super_admin','catalog_admin','order_admin','content_admin','marketing_admin','ads_admin','support_admin','analytics_admin','operations_admin'])
 type StaffAccess = { is_active: boolean; role: StaffRole | string }
 
 function safeNext(value: FormDataEntryValue | null) {
@@ -25,11 +25,18 @@ export async function adminPasswordSignIn(formData: FormData) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect(`/admin-login?error=invalid&next=${encodeURIComponent(next)}`)
 
-  const { data: accessData, error: accessError } = await supabase.rpc('get_current_staff_access').maybeSingle()
-  const access = accessData as unknown as StaffAccess | null
+  // Read only the signed-in user's own profile. Do not call the old public
+  // staff-access RPC from the authentication/authorization path.
+  const { data: accessData, error: accessError } = await supabase
+    .from('profiles')
+    .select('role,is_active')
+    .eq('id', user.id)
+    .maybeSingle()
+  const access = accessData as StaffAccess | null
   if (accessError || !access?.is_active || !staffRoles.has(access.role as StaffRole)) {
     await supabase.auth.signOut()
     redirect(`/admin-login?error=not_staff&next=${encodeURIComponent(next)}`)
   }
+
   redirect(next)
 }
