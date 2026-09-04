@@ -1,0 +1,4 @@
+-- Applied on 2026-09-04 to remove browser access to legacy administrative RPCs.
+-- The live database migration revokes EXECUTE from anon/authenticated and drops:
+-- public.admin_list_users(), public.admin_set_user_role(uuid,user_role,boolean),
+-- public.get_current_staff_access().
