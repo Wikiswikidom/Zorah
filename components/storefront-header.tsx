@@ -1,0 +1,4 @@
+"use client"
+import Link from 'next/link'
+import {useCommerce} from '@/components/commerce-provider'
+export function StorefrontHeader(){const{cartCount,wishlistCount}=useCommerce();return <header className="store-header"><div className="store-header-inner"><button className="store-menu" aria-label="Open menu" onClick={()=>document.body.classList.toggle('store-menu-open')}>☰</button><Link href="/" className="store-logo">ZORAH</Link><nav className="store-nav"><Link href="/shop">Shop</Link><Link href="/our-story">Our story</Link><Link href="/journal">Journal</Link></nav><div className="store-actions"><Link href="/search" aria-label="Search">Search</Link><Link href="/wishlist" aria-label="Wishlist">Wishlist{wishlistCount>0&&` (${wishlistCount})`}</Link><Link href="/cart" className="store-cart">Bag{cartCount>0&&` (${cartCount})`}</Link><Link href="/account">Account</Link></div></div></header>}
