@@ -1,0 +1,2 @@
+import {StorefrontHeader} from '@/components/storefront-header';import {CheckoutForm} from '@/components/checkout-form';import './checkout.css'
+export default function CheckoutPage(){return <><StorefrontHeader/><main className="page-shell checkout-page"><div className="checkout-intro"><h1 className="page-title">Checkout</h1><p className="page-lede">Confirm your delivery details, review your bag and continue securely to payment.</p></div><CheckoutForm/></main></>}
