@@ -7,7 +7,6 @@ import {RelatedProducts} from '@/components/related-products'
 import {RecentlyViewed} from '@/components/recently-viewed'
 import {StorefrontHeader} from '@/components/storefront-header'
 import {createClient} from '@/lib/supabase/server'
-import './product-page.css'
 export function generateStaticParams(){return products.map(product=>({slug:product.slug}))}
 export async function generateMetadata({params}:{params:Promise<{slug:string}>}):Promise<Metadata>{const{slug}=await params;const fallback=getProduct(slug);try{const s=await createClient();const{data}=await s.from('products').select('name,short_description,description,seo_title,seo_description,seo_keywords,status').eq('slug',slug).eq('status','published').maybeSingle();if(data)return{title:data.seo_title||`${data.name} | Zorah Handbags`,description:(data.seo_description||data.short_description||data.description||'Handcrafted leather handbags by Zorah.').slice(0,170),keywords:data.seo_keywords,alternates:{canonical:`/products/${slug}`},openGraph:{title:data.name,description:(data.short_description||data.description||'Zorah Handbags').slice(0,170),type:'website'}}}catch{}if(!fallback)return{title:'Product not found | Zorah'};return{title:`${fallback.name} | Zorah Handbags`,description:fallback.description}}
 function tone(name:string):Product['tone']{const n=name.toLowerCase();if(n.includes('green'))return'green';if(n.includes('brown')||n.includes('tan'))return'brown';if(n.includes('black'))return'black';return'ivory'}
