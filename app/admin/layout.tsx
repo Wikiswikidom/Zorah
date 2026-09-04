@@ -3,6 +3,7 @@ import { requireStaff } from '@/lib/auth/authorization'
 import './admin.css'
 import './admin-premium.css'
 import './operations-ui.css'
+import './product-centre.css'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { role } = await requireStaff()
