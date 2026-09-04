@@ -2,7 +2,7 @@ export type Product = {
   slug: string; name: string; price: string; priceValue: number; category: string;
   tone: "brown" | "green" | "ivory" | "black"; colors: string[];
   availability: "In stock" | "Made to order"; featuredRank: number;
-  description: string; details: string[]; variants: string[];
+  description: string; details: string[]; variants: string[]; imageUrl?: string | null;
 };
 export const products: Product[] = [
   { slug:"aurelia", name:"The Aurelia", price:"₦—", priceValue:0, category:"Shoulder Bags", tone:"brown", colors:["Brown","Black"], availability:"Made to order", featuredRank:1, description:"A softly structured leather silhouette designed for effortless everyday carry.", details:["Leather exterior","Lined interior","Interior pocket","Hand-finished hardware"], variants:["Brown","Black"] },
