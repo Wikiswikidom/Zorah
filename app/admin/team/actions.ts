@@ -31,10 +31,8 @@ export async function updateAdminRole(formData: FormData) {
   const { error } = await supabase.from('profiles').update({ role, is_active: active, updated_at: new Date().toISOString() }).eq('id',userId)
   if (error) redirect(`/admin/team?error=${encodeURIComponent(error.message.includes('last active') ? 'last_admin' : 'failed')}`)
 
-  if (role !== 'customer') {
-    const { error: authError } = await supabase.auth.admin.updateUserById(userId,{email_confirm:true})
-    if (authError) redirect('/admin/team?error=auth_update_failed')
-  }
+  const { error: authError } = await supabase.auth.admin.updateUserById(userId,{email_confirm:true})
+  if (authError) redirect('/admin/team?error=auth_update_failed')
 
   revalidatePath('/admin')
   revalidatePath('/admin/team')
