@@ -1,20 +1,21 @@
-import Link from "next/link";
-import { requireRole } from "@/lib/auth/authorization";
-import LandingCms from "@/components/admin/landing-cms";
+import Link from 'next/link'
+import { requireRole } from '@/lib/auth/authorization'
+import LandingCmsPanel from '@/components/admin/landing-cms-panel'
 
 export default async function AdminContentPage(){
-  await requireRole(["content_admin","marketing_admin"]);
+  await requireRole(['content_admin','marketing_admin'])
   return <main className="zorah-content-page">
     <header className="zorah-content-header">
       <Link href="/admin" className="zorah-content-brand">ZORAH</Link>
-      <Link href="/" className="zorah-content-store-link">View store ↗</Link>
+      <div className="zorah-content-header-actions"><Link href="/" target="_blank" className="zorah-content-store-link">Preview homepage ↗</Link><Link href="/admin" className="zorah-content-store-link">Back to admin</Link></div>
     </header>
     <section className="zorah-content-wrap">
       <div className="zorah-content-intro">
-        <h1>Landing page</h1>
-        <p>Edit the customer homepage without touching code. Manage the logo, hero slides, photography, copy, buttons, sections, order and visibility from one workspace.</p>
+        <span className="zorah-content-kicker">Content management</span>
+        <h1>Homepage editor</h1>
+        <p>Edit the actual Zorah customer homepage from one place: logo, hero slides, images, copy, buttons, visibility and section order. No code changes are required.</p>
       </div>
-      <LandingCms/>
+      <LandingCmsPanel/>
     </section>
   </main>
 }
