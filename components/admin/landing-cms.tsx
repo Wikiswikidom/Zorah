@@ -13,7 +13,7 @@ const types=["hero","promo","product_rail","editorial","craft","collections","cu
 export default function LandingCms(){
  const[rows,setRows]=useState<Section[]>([]),[form,setForm]=useState<any>(empty),[editingId,setEditingId]=useState<string|null>(null),[file,setFile]=useState<File|null>(null),[preview,setPreview]=useState<string|null>(null),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[message,setMessage]=useState(""),[error,setError]=useState("");
  const heroes=useMemo(()=>rows.filter(x=>x.section_type==="hero"&&x.status!=="archived"),[rows]);
- const set=(key:string,value:unknown)=>setForm((current:any)=>({...current,[key]:value});
+ const set=(key:string,value:unknown)=>setForm((current:any)=>({...current,[key]:value}));
  const cleanupPreview=()=>{if(preview)URL.revokeObjectURL(preview)};
  const reset=()=>{cleanupPreview();setEditingId(null);setForm({...empty});setFile(null);setPreview(null);setError("")};
  const load=async()=>{setLoading(true);setError("");try{const response=await fetch("/api/admin/content",{cache:"no-store"});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||"Unable to load landing-page content.");setRows(Array.isArray(data.sections)?data.sections:[])}catch(e){setError(e instanceof Error?e.message:"Unable to load landing-page content.")}finally{setLoading(false)}};
