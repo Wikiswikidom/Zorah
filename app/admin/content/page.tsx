@@ -1,2 +1,20 @@
-import Link from "next/link";import {requireRole} from "@/lib/auth/authorization";import LandingCms from "@/components/admin/landing-cms";
-export default async function AdminContentPage(){await requireRole(["content_admin","marketing_admin"]);return <main className="min-h-screen bg-[#F7F3EC] text-[#111111]"><header className="border-b bg-[#111111] text-white"><div className="mx-auto flex max-w-7xl items-center justify-between px-5 py-5 sm:px-8"><Link href="/admin" className="font-serif text-2xl tracking-[.12em]">ZORAH</Link><Link href="/" className="text-xs uppercase tracking-[.18em] text-white/75">View store</Link></div></header><section className="mx-auto max-w-7xl px-5 py-10 sm:px-8"><h1 className="font-serif text-4xl sm:text-5xl">Landing page</h1><p className="mt-3 max-w-2xl text-sm leading-7 text-black/65">Edit the logo, hero slides, images, text, buttons, sections, order and visibility from one place.</p><div className="mt-8"><LandingCms/></div></section></main>}
+import Link from "next/link";
+import { requireRole } from "@/lib/auth/authorization";
+import LandingCms from "@/components/admin/landing-cms";
+
+export default async function AdminContentPage(){
+  await requireRole(["content_admin","marketing_admin"]);
+  return <main className="zorah-content-page">
+    <header className="zorah-content-header">
+      <Link href="/admin" className="zorah-content-brand">ZORAH</Link>
+      <Link href="/" className="zorah-content-store-link">View store ↗</Link>
+    </header>
+    <section className="zorah-content-wrap">
+      <div className="zorah-content-intro">
+        <h1>Landing page</h1>
+        <p>Edit the customer homepage without touching code. Manage the logo, hero slides, photography, copy, buttons, sections, order and visibility from one workspace.</p>
+      </div>
+      <LandingCms/>
+    </section>
+  </main>
+}
