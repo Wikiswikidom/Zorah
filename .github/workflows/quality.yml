@@ -39,4 +39,16 @@ jobs:
         run: npm run build
 
       - name: Dependency audit
-        run: npm audit --audit-level=high
+        run: |
+          set -e
+          for attempt in 1 2 3; do
+            echo "Running npm audit (attempt $attempt/3)…"
+            if npm audit --audit-level=high; then
+              exit 0
+            fi
+            if [ "$attempt" -lt 3 ]; then
+              echo "npm audit failed; retrying after a short delay…"
+              sleep 10
+            fi
+          done
+          exit 1
