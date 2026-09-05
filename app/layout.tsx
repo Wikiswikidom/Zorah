@@ -11,6 +11,7 @@ import "./storefront-header.css";
 import "./product-page.css";
 import "./checkout/checkout.css";
 import "./storefront-final.css";
+import "./auth-landing.css";
 import { Cormorant_Garamond, Open_Sans } from "next/font/google";
 import { CommerceProvider } from "@/components/commerce-provider";
 
