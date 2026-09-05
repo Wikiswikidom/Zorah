@@ -24,11 +24,7 @@ function parse(body:unknown){
 }
 
 async function withMediaUrls(supabase:ReturnType<typeof createAdminClient>,data:any[]){
-  return Promise.all((data??[]).map(async section=>{
-    if(!section.media_path)return{...section,media_url:null}
-    const {data:publicData}=supabase.storage.from('landing-media').getPublicUrl(section.media_path)
-    return{...section,media_url:publicData.publicUrl||null}
-  }))
+  return Promise.all((data??[]).map(async section=>{if(!section.media_path)return{...section,media_url:null};const {data:publicData}=supabase.storage.from('landing-media').getPublicUrl(section.media_path);return{...section,media_url:publicData.publicUrl||null}}))
 }
 
 export async function GET(){
@@ -57,7 +53,7 @@ export async function POST(request:Request){
     }
     const{data,error}=await supabase.from('landing_sections').insert({...parsedData,created_by:user.id,updated_by:user.id,published_at:parsedData.status==='published'?new Date().toISOString():null}).select('id').single()
     if(error)return jsonError(error.code==='23505'?'A section with this key already exists.':'Could not create section.',error.code==='23505'?409:400)
-    revalidatePath('/')
+    revalidatePath('/');revalidatePath('/landing')
     return NextResponse.json({id:data.id},{status:201})
   }catch(error){console.error('Landing CMS POST failed',error);return jsonError(error instanceof Error?error.message:'Unable to create landing section.',500)}
 }
