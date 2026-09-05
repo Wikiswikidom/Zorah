@@ -13,6 +13,10 @@ export function StorefrontHeader(){
       .then(r=>r.ok?r.json():null)
       .then(d=>{const x=d?.sections?.find((s:{section_key:string})=>s.section_key==='site-logo');if(x?.media_url||x?.media_path)setLogo(x.media_url||x.media_path)})
       .catch(()=>{})
+    fetch('/api/branding/logo',{cache:'no-store'})
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{if(d?.url)setLogo(d.url)})
+      .catch(()=>{})
   },[])
 
   return <>
