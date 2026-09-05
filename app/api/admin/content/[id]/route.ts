@@ -9,7 +9,6 @@ const statuses=new Set(['draft','published','archived'])
 const text=(v:unknown,max:number)=>typeof v==='string'?v.trim().slice(0,max):''
 const href=(v:unknown)=>{const value=text(v,240);return!value||(/^\/(?!\/)[^\s]*$/.test(value))?(value||null):undefined}
 const errorResponse=(message:string,status=400)=>NextResponse.json({error:message},{status})
-
 function parse(body:unknown){
   if(!body||typeof body!=='object'||Array.isArray(body))return{error:'Invalid request.'}
   const b=body as Record<string,unknown>,section_key=text(b.section_key,80),section_type=text(b.section_type,30),theme=text(b.theme,20)||'light',status=text(b.status,20)||'draft',primary_cta_href=href(b.primary_cta_href),secondary_cta_href=href(b.secondary_cta_href)
@@ -34,16 +33,17 @@ export async function PUT(request:Request,{params}:{params:Promise<{id:string}>}
     if(!parsedData)return errorResponse('Invalid landing-section payload.',500)
     const supabase=createAdminClient()
     if(parsedData.section_type==='hero'){
-      const{count}=await supabase.from('landing_sections').select('id',{count:'exact',head:true}).eq('section_type','hero').neq('status','archived').neq('id',id)
+      const{count,error}=await supabase.from('landing_sections').select('id',{count:'exact',head:true}).eq('section_type','hero').neq('status','archived').neq('id',id)
+      if(error)return errorResponse('Could not validate hero slide limit.',500)
       if((count??0)>=5)return errorResponse('Zorah supports a maximum of 5 hero slides.',409)
     }
     const{data:existing}=await supabase.from('landing_sections').select('id').eq('id',id).maybeSingle()
     if(!existing)return errorResponse('Landing section not found.',404)
     const{error}=await supabase.from('landing_sections').update({...parsedData,updated_by:user.id,published_at:parsedData.status==='published'?new Date().toISOString():null}).eq('id',id)
     if(error)return errorResponse(error.code==='23505'?'A section with this key already exists.':'Could not update section.',error.code==='23505'?409:400)
-    revalidatePath('/')
+    revalidatePath('/');revalidatePath('/landing')
     return NextResponse.json({ok:true})
-  }catch(error){console.error('Landing CMS PUT failed',error);return errorResponse('Unable to update landing section.',500)}
+  }catch(error){console.error('Landing CMS PUT failed',error);return errorResponse(error instanceof Error?error.message:'Unable to update landing section.',500)}
 }
 
 export async function DELETE(_request:Request,{params}:{params:Promise<{id:string}>}){
@@ -54,7 +54,7 @@ export async function DELETE(_request:Request,{params}:{params:Promise<{id:strin
     const supabase=createAdminClient()
     const{error}=await supabase.from('landing_sections').delete().eq('id',id)
     if(error)return errorResponse('Could not delete section.',400)
-    revalidatePath('/')
+    revalidatePath('/');revalidatePath('/landing')
     return NextResponse.json({ok:true})
-  }catch(error){console.error('Landing CMS DELETE failed',error);return errorResponse('Unable to delete landing section.',500)}
+  }catch(error){console.error('Landing CMS DELETE failed',error);return errorResponse(error instanceof Error?error.message:'Unable to delete landing section.',500)}
 }
