@@ -2,4 +2,45 @@
 import Link from 'next/link'
 import {useEffect,useState} from 'react'
 import {useCommerce} from '@/components/commerce-provider'
-export function StorefrontHeader(){const{cartCount,wishlistCount}=useCommerce();const[logo,setLogo]=useState<string|null>(null);useEffect(()=>{fetch('/api/landing',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(d=>{const x=d?.sections?.find((s:{section_key:string})=>s.section_key==='site-logo');if(x?.media_path)setLogo(x.media_path)}).catch(()=>{})},[]);return <header className="store-header"><div className="store-header-inner"><button type="button" className="store-menu" aria-label="Open menu" onClick={()=>document.body.classList.toggle('store-menu-open')}>☰</button><Link href="/" className="store-logo" aria-label="Zorah home">{logo?<img src={logo} alt="Zorah"/>:'ZORAH'}</Link><nav className="store-nav"><Link href="/shop">Shop</Link><Link href="/our-story">Our story</Link><Link href="/journal">Journal</Link></nav><div className="store-actions"><Link href="/search" aria-label="Search">Search</Link><Link href="/wishlist" aria-label="Wishlist">Wishlist{wishlistCount>0&&` (${wishlistCount})`}</Link><Link href="/cart" className="store-cart">Bag{cartCount>0&&` (${cartCount})`}</Link><Link href="/account">Account</Link></div></div></header>}
+
+export function StorefrontHeader(){
+  const {cartCount,wishlistCount}=useCommerce()
+  const [logo,setLogo]=useState<string|null>(null)
+  const [menuOpen,setMenuOpen]=useState(false)
+
+  useEffect(()=>{
+    fetch('/api/landing',{cache:'no-store'})
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{const x=d?.sections?.find((s:{section_key:string})=>s.section_key==='site-logo');if(x?.media_url||x?.media_path)setLogo(x.media_url||x.media_path)})
+      .catch(()=>{})
+  },[])
+
+  return <>
+    <header className="store-header">
+      <div className="store-topline"><div className="store-header-inner store-header-inner-top">
+        <button type="button" className="store-menu" aria-label="Open menu" aria-expanded={menuOpen} onClick={()=>setMenuOpen(v=>!v)}>☰</button>
+        <Link href="/" className="store-logo" aria-label="Zorah home">{logo?<img src={logo} alt="Zorah"/>:<span>ZORAH</span>}</Link>
+        <nav className={`store-nav ${menuOpen?'is-open':''}`}>
+          <Link href="/shop" onClick={()=>setMenuOpen(false)}>Shop</Link>
+          <Link href="/collections" onClick={()=>setMenuOpen(false)}>Categories</Link>
+          <Link href="/our-story" onClick={()=>setMenuOpen(false)}>Our story</Link>
+          <Link href="/journal" onClick={()=>setMenuOpen(false)}>Journal</Link>
+        </nav>
+        <div className="store-actions">
+          <Link href="/search" className="store-search-link">⌕ <span>Search</span></Link>
+          <Link href="/wishlist" className="store-wishlist">♡ <span>Wishlist{wishlistCount>0&&` (${wishlistCount})`}</span></Link>
+          <Link href="/cart" className="store-cart" aria-label={`Open shopping bag${cartCount?` (${cartCount} items)`:''}`}>🛒 <span>Cart{cartCount>0&&` (${cartCount})`}</span></Link>
+          <Link href="/account" className="store-account">♙ <span>Account</span></Link>
+        </div>
+      </div></div>
+      <div className="store-mobile-search"><Link href="/search" aria-label="Search Zorah">⌕ <span>Search Zorah handbags, collections and more</span></Link><Link href="/cart" aria-label="Cart">🛒{cartCount>0&&<b>{cartCount}</b>}</Link></div>
+    </header>
+    <nav className="store-bottom-nav" aria-label="Primary mobile navigation">
+      <Link href="/"><span>⌂</span>Home</Link>
+      <Link href="/collections"><span>▦</span>Categories</Link>
+      <Link href="/cart"><span className="nav-badge-wrap">🛒{cartCount>0&&<b>{cartCount}</b>}</span>Cart</Link>
+      <Link href="/wishlist"><span>♡</span>Wishlist</Link>
+      <Link href="/account"><span className="nav-badge-wrap">♙</span>Account</Link>
+    </nav>
+  </>
+}
