@@ -2,7 +2,6 @@
 
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { StaffRole } from '@/lib/auth/authorization'
 
 const staffRoles = new Set<StaffRole>(['super_admin','catalog_admin','order_admin','content_admin','marketing_admin','ads_admin','support_admin','analytics_admin','operations_admin'])
@@ -26,11 +25,11 @@ export async function adminPasswordSignIn(formData: FormData) {
   const user = signInData.user
   if (!user) redirect(`/admin-login?error=invalid&next=${encodeURIComponent(next)}`)
 
-  // The profile is security-sensitive. Read it with the server-only admin client
-  // after Supabase Auth has authenticated the user. Never expose this client or
-  // its service-role key to the browser.
-  const admin = createAdminClient()
-  const { data: accessData, error: accessError } = await admin
+  // Read only the authenticated user's profile through the normal Supabase
+  // server client. The profiles RLS policy permits users to read their own row,
+  // so administrator access does not depend on a service-role key being present
+  // in the deployment environment.
+  const { data: accessData, error: accessError } = await supabase
     .from('profiles')
     .select('role,is_active')
     .eq('id', user.id)
