@@ -18,5 +18,5 @@ import { CommerceProvider } from "@/components/commerce-provider";
 
 const display=Cormorant_Garamond({subsets:["latin"],variable:"--font-display",display:"swap"});
 const sans=Open_Sans({subsets:["latin"],variable:"--font-sans",display:"swap"});
-export const metadata:Metadata={title:"Zorah Handbags — Crafted to be carried.",description:"Contemporary leather handbags crafted in Lagos with a modern African point of view."};
+export const metadata:Metadata={title:"Zorah Handbags — Crafted to be carried.",description:"Contemporary leather handbags crafted in Lagos with a modern African point of view.",icons:{icon:"/icon"}};
 export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body className={`${display.variable} ${sans.variable}`}><CommerceProvider>{children}</CommerceProvider></body></html>}
