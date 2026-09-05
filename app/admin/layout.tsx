@@ -1,6 +1,7 @@
 import { AdminShell } from '@/components/admin/admin-shell'
 import { requireStaff } from '@/lib/auth/authorization'
 import './admin.css'
+import './admin-shell.css'
 import './admin-premium.css'
 import './operations-ui.css'
 import './product-centre.css'
