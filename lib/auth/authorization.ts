@@ -1,6 +1,5 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 
 export type StaffRole =
   | 'super_admin'
@@ -35,11 +34,10 @@ export async function requireStaff() {
     throw new Error('Authentication redirect did not complete')
   }
 
-  // Authorization is checked on the server with the service-role client.
-  // This avoids depending on a client-session/RLS profile lookup while keeping
-  // the privileged client entirely server-side.
-  const admin = createAdminClient()
-  const { data: accessData, error: accessError } = await admin
+  // The authenticated user's own profile is readable under the profiles RLS
+  // policy. Keeping this check on the server avoids trusting browser state and
+  // avoids requiring SUPABASE_SERVICE_ROLE_KEY just to authorize staff pages.
+  const { data: accessData, error: accessError } = await supabase
     .from('profiles')
     .select('role,is_active')
     .eq('id', user.id)
