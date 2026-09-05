@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 export async function GET(){
   const supabase=await createClient()
@@ -18,7 +19,13 @@ export async function PUT(request:Request){
   const full_name=typeof body?.full_name==='string'?body.full_name.trim().slice(0,120):''
   const phone=typeof body?.phone==='string'?body.phone.trim().slice(0,30):''
   if(!full_name)return NextResponse.json({error:'Full name is required'},{status:400})
-  const {data:profile,error}=await supabase.from('profiles').upsert({id:user.id,full_name,phone},{onConflict:'id'}).select('full_name,phone').single()
-  if(error)return NextResponse.json({error:'Could not save profile details'},{status:500})
-  return NextResponse.json({profile,email:user.email||''})
+  try{
+    const admin=createAdminClient()
+    const {data:profile,error}=await admin.from('profiles').upsert({id:user.id,full_name,phone},{onConflict:'id'}).select('full_name,phone').single()
+    if(error)throw error
+    return NextResponse.json({profile,email:user.email||''})
+  }catch(error){
+    console.error('Profile update failed',error)
+    return NextResponse.json({error:'Could not save profile details'},{status:500})
+  }
 }
