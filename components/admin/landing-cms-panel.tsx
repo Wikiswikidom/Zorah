@@ -1,177 +1,30 @@
 'use client'
-
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
-
-type Section = {
-  id: string
-  section_key: string
-  section_type: string
-  eyebrow: string | null
-  title: string | null
-  body: string | null
-  primary_cta_label: string | null
-  primary_cta_href: string | null
-  secondary_cta_label: string | null
-  secondary_cta_href: string | null
-  media_path: string | null
-  media_url: string | null
-  theme: string
-  is_enabled: boolean
-  sort_order: number
-  status: string
-  scheduled_publish_at: string | null
-}
-
-type FormState = Omit<Section, 'id' | 'media_url'> & { media_url?: string }
-
-const TYPES = ['hero', 'promo', 'product_rail', 'editorial', 'craft', 'collections', 'custom_order', 'journal', 'testimonial', 'newsletter', 'media']
-const THEMES = ['light', 'dark', 'leather', 'green', 'ivory']
-const STATUSES = ['draft', 'published', 'archived']
-const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif']
-const MAX_IMAGE = 10 * 1024 * 1024
-
-const empty: FormState = {
-  section_key: '', section_type: 'hero', eyebrow: '', title: '', body: '',
-  primary_cta_label: 'Shop handbags', primary_cta_href: '/shop',
-  secondary_cta_label: '', secondary_cta_href: '', media_path: '', media_url: '',
-  theme: 'dark', is_enabled: true, sort_order: 10, status: 'draft', scheduled_publish_at: null,
-}
-
-export default function LandingCmsPanel() {
-  const [sections, setSections] = useState<Section[]>([])
-  const [form, setForm] = useState<FormState>(empty)
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [file, setFile] = useState<File | null>(null)
-  const [preview, setPreview] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
-  const [error, setError] = useState('')
-  const [message, setMessage] = useState('')
-
-  const heroes = useMemo(() => sections.filter(s => s.section_type === 'hero' && s.status !== 'archived'), [sections])
-  const update = (key: keyof FormState, value: unknown) => setForm(current => ({ ...current, [key]: value }))
-
-  const revokePreview = () => { if (preview) URL.revokeObjectURL(preview) }
-  const reset = () => {
-    revokePreview(); setEditingId(null); setForm({ ...empty }); setFile(null); setPreview(null); setError('');
-  }
-
-  const load = async () => {
-    setLoading(true); setError('')
-    try {
-      const response = await fetch('/api/admin/content', { cache: 'no-store' })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Unable to load landing-page content.')
-      setSections(Array.isArray(data.sections) ? data.sections : [])
-    } catch (e) { setError(e instanceof Error ? e.message : 'Unable to load landing-page content.') }
-    finally { setLoading(false) }
-  }
-
-  useEffect(() => { void load(); return () => revokePreview() }, [])
-
-  const edit = (section: Section) => {
-    revokePreview(); setEditingId(section.id); setForm({ ...section, media_url: section.media_url || '', scheduled_publish_at: section.scheduled_publish_at ? new Date(section.scheduled_publish_at).toISOString().slice(0, 16) : null })
-    setFile(null); setPreview(null); setError(''); setMessage(''); window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
-  const chooseImage = (next: File | null) => {
-    revokePreview(); setFile(null); setPreview(null)
-    if (!next) return
-    if (!IMAGE_TYPES.includes(next.type)) return setError('Use JPG, PNG, WebP or AVIF.')
-    if (next.size > MAX_IMAGE) return setError('Each image must be 10 MiB or smaller.')
-    setFile(next); setPreview(URL.createObjectURL(next)); setError(''); setMessage('')
-  }
-
-  const uploadImage = async () => {
-    if (!file || saving) return
-    setSaving(true); setError(''); setMessage('')
-    try {
-      const body = new FormData(); body.append('file', file)
-      const response = await fetch('/api/admin/content/media', { method: 'POST', body })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Artwork upload failed.')
-      update('media_path', data.path || ''); update('media_url', data.url || preview || '')
-      setFile(null); setMessage('Image uploaded. Save this section to publish the change.')
-    } catch (e) { setError(e instanceof Error ? e.message : 'Artwork upload failed.') }
-    finally { setSaving(false) }
-  }
-
-  const save = async (event: FormEvent) => {
-    event.preventDefault(); if (saving) return
-    const key = form.section_key.trim()
-    if (!key) return setError('Give this section a unique key.')
-    if (!editingId && form.section_type === 'hero' && heroes.length >= 5) return setError('Maximum 5 hero slides.')
-    setSaving(true); setError(''); setMessage('')
-    try {
-      const payload = { ...form, section_key: key, eyebrow: form.eyebrow?.trim() || null, title: form.title?.trim() || null, body: form.body?.trim() || null, primary_cta_label: form.primary_cta_label?.trim() || null, secondary_cta_label: form.secondary_cta_label?.trim() || null, sort_order: Number(form.sort_order), scheduled_publish_at: form.scheduled_publish_at || null }
-      delete (payload as Partial<FormState>).media_url
-      const response = await fetch(editingId ? `/api/admin/content/${editingId}` : '/api/admin/content', { method: editingId ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-      const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Could not save section.')
-      reset(); await load(); setMessage('Saved. Publish status and visibility now control what customers see.')
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not save section.') }
-    finally { setSaving(false) }
-  }
-
-  const remove = async (id: string) => {
-    if (!confirm('Remove this homepage section?')) return
-    setSaving(true); setError(''); setMessage('')
-    try {
-      const response = await fetch(`/api/admin/content/${id}`, { method: 'DELETE' }); const data = await response.json().catch(() => ({}))
-      if (!response.ok) throw new Error(data.error || 'Could not remove section.')
-      if (editingId === id) reset(); await load(); setMessage('Section removed from the homepage controls.')
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not remove section.') }
-    finally { setSaving(false) }
-  }
-
-  const move = async (index: number, direction: -1 | 1) => {
-    const target = index + direction; if (target < 0 || target >= sections.length || saving) return
-    const a = sections[index], b = sections[target]; setSaving(true); setError(''); setMessage('')
-    try {
-      const saveOrder = async (section: Section, order: number) => {
-        const payload = { section_key: section.section_key, section_type: section.section_type, eyebrow: section.eyebrow || '', title: section.title || '', body: section.body || '', primary_cta_label: section.primary_cta_label || '', primary_cta_href: section.primary_cta_href || '', secondary_cta_label: section.secondary_cta_label || '', secondary_cta_href: section.secondary_cta_href || '', media_path: section.media_path || '', theme: section.theme, is_enabled: section.is_enabled, sort_order: order, status: section.status, scheduled_publish_at: section.scheduled_publish_at || null }
-        const r = await fetch(`/api/admin/content/${section.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || 'Could not reorder sections.')
-      }
-      await saveOrder(a, b.sort_order); await saveOrder(b, a.sort_order); await load(); setMessage('Homepage order updated.')
-    } catch (e) { setError(e instanceof Error ? e.message : 'Could not reorder sections.') }
-    finally { setSaving(false) }
-  }
-
-  return <div className="zorah-cms-editor">
-    <div className="zorah-cms-toolbar">
-      <div><strong>Homepage editor</strong><span>{sections.length} sections · {heroes.length}/5 hero slides</span></div>
-      <div className="zorah-cms-toolbar-actions"><button type="button" onClick={() => void load()} disabled={loading || saving}>Refresh</button><a href="/" target="_blank" rel="noreferrer">Preview homepage ↗</a></div>
-    </div>
-
-    {(error || message) && <div className={`zorah-cms-alert ${error ? 'is-error' : ''}`} role={error ? 'alert' : 'status'}>{error || message}</div>}
-
-    <div className="zorah-cms-grid">
-      <form className="zorah-cms-form" onSubmit={save}>
-        <div className="zorah-cms-form-head"><div><span>{editingId ? 'Editing section' : 'Create section'}</span><h2>{editingId ? form.title || form.section_key : 'Add homepage content'}</h2></div>{editingId && <button type="button" onClick={reset}>Cancel</button>}</div>
-
-        <label>Section name / key<input required value={form.section_key} onChange={e => update('section_key', e.target.value)} placeholder="hero-01, story, site-logo" /></label>
-        <div className="zorah-cms-two"><label>Section type<select value={form.section_type} onChange={e => update('section_type', e.target.value)}>{TYPES.map(type => <option key={type}>{type}</option>)}</select></label><label>Display order<input type="number" min="0" max="10000" value={form.sort_order} onChange={e => update('sort_order', e.target.value)} /></label></div>
-        <label>Headline / title<input value={form.title || ''} onChange={e => update('title', e.target.value)} placeholder="What customers should read" /></label>
-        <label>Body copy<textarea rows={6} value={form.body || ''} onChange={e => update('body', e.target.value)} placeholder="Keep it clear, confident and human." /></label>
-
-        <div className="zorah-cms-group"><h3>Actions</h3><div className="zorah-cms-two"><label>Primary button<input value={form.primary_cta_label || ''} onChange={e => update('primary_cta_label', e.target.value)} placeholder="Shop handbags" /></label><label>Primary link<input value={form.primary_cta_href || ''} onChange={e => update('primary_cta_href', e.target.value)} placeholder="/shop" /></label><label>Secondary button<input value={form.secondary_cta_label || ''} onChange={e => update('secondary_cta_label', e.target.value)} placeholder="Our story" /></label><label>Secondary link<input value={form.secondary_cta_href || ''} onChange={e => update('secondary_cta_href', e.target.value)} placeholder="/our-story" /></label></div></div>
-
-        <div className="zorah-cms-media"><div className="zorah-cms-media-head"><div><h3>Section image</h3><p>Use real Zorah photography, campaign artwork or the brand logo.</p></div>{(form.media_path || preview) && <button type="button" onClick={() => { revokePreview(); update('media_path', ''); update('media_url', ''); setFile(null); setPreview(null) }}>Remove image</button>}</div>{(preview || form.media_url) ? <img src={preview || form.media_url} alt="Selected section artwork" /> : <div className="zorah-cms-media-empty">No image attached</div>}<input type="file" accept={IMAGE_TYPES.join(',')} onChange={e => chooseImage(e.target.files?.[0] || null)} />{file && <button type="button" onClick={() => void uploadImage()} disabled={saving}>{saving ? 'Uploading…' : 'Upload selected image'}</button>}</div>
-
-        <div className="zorah-cms-two"><label>Theme<select value={form.theme} onChange={e => update('theme', e.target.value)}>{THEMES.map(theme => <option key={theme}>{theme}</option>)}</select></label><label>Status<select value={form.status} onChange={e => update('status', e.target.value)}>{STATUSES.map(status => <option key={status}>{status}</option>)}</select></label></div>
-        <label>Schedule publish<input type="datetime-local" value={form.scheduled_publish_at || ''} onChange={e => update('scheduled_publish_at', e.target.value || null)} /></label>
-        <label className="zorah-cms-check"><input type="checkbox" checked={form.is_enabled} onChange={e => update('is_enabled', e.target.checked)} /> Visible on customer homepage</label>
-        <button className="zorah-cms-save" disabled={saving}>{saving ? 'Saving…' : editingId ? 'Save changes' : 'Create section'}</button>
-      </form>
-
-      <section className="zorah-cms-list">
-        <div className="zorah-cms-list-head"><div><span>Live structure</span><h2>Homepage sections</h2></div><button type="button" onClick={reset}>+ New section</button></div>
-        {loading ? <div className="zorah-cms-empty">Loading homepage content…</div> : !sections.length ? <div className="zorah-cms-empty"><strong>No homepage sections</strong><p>The customer homepage has no CMS records yet. Create the first section or restore the default structure.</p></div> : <div className="zorah-cms-items">{sections.map((section, index) => <article className={`zorah-cms-item ${editingId === section.id ? 'is-editing' : ''}`} key={section.id}>
-          <div className="zorah-cms-thumb">{section.media_url ? <img src={section.media_url} alt="" /> : <span>{section.section_type === 'hero' ? 'H' : 'Z'}</span>}</div>
-          <div className="zorah-cms-item-main"><h3>{section.title || section.section_key}</h3><p>{section.section_type} · {section.status}{section.is_enabled ? '' : ' · hidden'}</p></div>
-          <div className="zorah-cms-item-actions"><button type="button" onClick={() => edit(section)}>Edit</button><button type="button" onClick={() => void remove(section.id)} disabled={saving}>Remove</button><div className="zorah-cms-order"><button type="button" aria-label="Move section up" onClick={() => void move(index, -1)} disabled={index === 0 || saving}>↑</button><button type="button" aria-label="Move section down" onClick={() => void move(index, 1)} disabled={index === sections.length - 1 || saving}>↓</button></div></div>
-        </article>)}</div>}
-      </section>
-    </div>
-  </div>
+import {useEffect,useMemo,useState,type FormEvent} from 'react'
+type Section={id:string;section_key:string;section_type:string;eyebrow:string|null;title:string|null;body:string|null;primary_cta_label:string|null;primary_cta_href:string|null;secondary_cta_label:string|null;secondary_cta_href:string|null;media_path:string|null;media_url:string|null;theme:string;is_enabled:boolean;sort_order:number;status:string;scheduled_publish_at:string|null}
+type FormState=Omit<Section,'id'|'media_url'>&{media_url?:string}
+const TYPES=['hero','promo','product_rail','editorial','craft','collections','custom_order','journal','testimonial','newsletter','media']
+const THEMES=['light','dark','leather','green','ivory']
+const STATUSES=['draft','published','archived']
+const IMAGE_TYPES=['image/jpeg','image/png','image/webp','image/avif']
+const MAX_IMAGE=10*1024*1024
+const empty:FormState={section_key:'',section_type:'hero',eyebrow:'',title:'',body:'',primary_cta_label:'Shop handbags',primary_cta_href:'/shop',secondary_cta_label:'',secondary_cta_href:'',media_path:'',media_url:'',theme:'dark',is_enabled:true,sort_order:10,status:'draft',scheduled_publish_at:null}
+export default function LandingCmsPanel(){
+ const[sections,setSections]=useState<Section[]>([]),[form,setForm]=useState<FormState>(empty),[editingId,setEditingId]=useState<string|null>(null),[file,setFile]=useState<File|null>(null),[preview,setPreview]=useState<string|null>(null),[loading,setLoading]=useState(true),[saving,setSaving]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState('')
+ const heroes=useMemo(()=>sections.filter(s=>s.section_type==='hero'&&s.status!=='archived'),[sections]);const update=(key:keyof FormState,value:unknown)=>setForm(current=>({...current,[key]:value}));const revokePreview=()=>{if(preview)URL.revokeObjectURL(preview)}
+ const reset=()=>{revokePreview();setEditingId(null);setForm({...empty});setFile(null);setPreview(null);setError('');setMessage('')}
+ const load=async()=>{setLoading(true);setError('');try{const r=await fetch('/api/admin/content',{cache:'no-store'}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Unable to load landing-page content.');setSections(Array.isArray(d.sections)?d.sections:[])}catch(e){setError(e instanceof Error?e.message:'Unable to load landing-page content.')}finally{setLoading(false)}}
+ useEffect(()=>{void load();return()=>revokePreview()},[])
+ const edit=(section:Section)=>{revokePreview();setEditingId(section.id);setForm({...section,media_url:section.media_url||'',scheduled_publish_at:section.scheduled_publish_at?new Date(section.scheduled_publish_at).toISOString().slice(0,16):null});setFile(null);setPreview(null);setError('');setMessage('');window.scrollTo({top:0,behavior:'smooth'})}
+ const chooseImage=(next:File|null)=>{revokePreview();setFile(null);setPreview(null);if(!next)return;if(!IMAGE_TYPES.includes(next.type))return setError('Use JPG, PNG, WebP or AVIF for homepage artwork.');if(next.size>MAX_IMAGE)return setError('Each homepage image must be 10 MiB or smaller.');setFile(next);setPreview(URL.createObjectURL(next));setError('');setMessage('')}
+ const uploadImage=async()=>{if(!file||saving)return;setSaving(true);setError('');setMessage('');try{const body=new FormData();body.append('file',file);const r=await fetch('/api/admin/content/media',{method:'POST',body}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Artwork upload failed.');update('media_path',d.path||'');update('media_url',d.url||preview||'');setFile(null);setMessage('Image uploaded. Save the section to keep the change.')}catch(e){setError(e instanceof Error?e.message:'Artwork upload failed.')}finally{setSaving(false)}}
+ const save=async(event:FormEvent)=>{event.preventDefault();if(saving)return;const key=form.section_key.trim();if(!key)return setError('Give this section a unique key.');if(!editingId&&form.section_type==='hero'&&heroes.length>=5)return setError('Maximum 5 hero slides.');setSaving(true);setError('');setMessage('');try{const payload={...form,section_key:key,eyebrow:form.eyebrow?.trim()||null,title:form.title?.trim()||null,body:form.body?.trim()||null,primary_cta_label:form.primary_cta_label?.trim()||null,secondary_cta_label:form.secondary_cta_label?.trim()||null,sort_order:Number(form.sort_order),scheduled_publish_at:form.scheduled_publish_at||null};delete(payload as Partial<FormState>).media_url;const r=await fetch(editingId?`/api/admin/content/${editingId}`:'/api/admin/content',{method:editingId?'PUT':'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Could not save section.');reset();await load();setMessage('Saved successfully.')}catch(e){setError(e instanceof Error?e.message:'Could not save section.')}finally{setSaving(false)}}
+ const remove=async(id:string)=>{if(!confirm('Remove this homepage section?'))return;setSaving(true);setError('');setMessage('');try{const r=await fetch(`/api/admin/content/${id}`,{method:'DELETE'}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Could not remove section.');if(editingId===id)reset();await load();setMessage('Section removed.')}catch(e){setError(e instanceof Error?e.message:'Could not remove section.')}finally{setSaving(false)}}
+ const move=async(index:number,direction:-1|1)=>{const target=index+direction;if(target<0||target>=sections.length||saving)return;const a=sections[index],b=sections[target];setSaving(true);setError('');setMessage('');try{const saveOrder=async(s:Section,order:number)=>{const payload={section_key:s.section_key,section_type:s.section_type,eyebrow:s.eyebrow||'',title:s.title||'',body:s.body||'',primary_cta_label:s.primary_cta_label||'',primary_cta_href:s.primary_cta_href||'',secondary_cta_label:s.secondary_cta_label||'',secondary_cta_href:s.secondary_cta_href||'',media_path:s.media_path||'',theme:s.theme,is_enabled:s.is_enabled,sort_order:order,status:s.status,scheduled_publish_at:s.scheduled_publish_at||null};const r=await fetch(`/api/admin/content/${s.id}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Could not reorder sections.')};await saveOrder(a,b.sort_order);await saveOrder(b,a.sort_order);await load();setMessage('Homepage order updated.')}catch(e){setError(e instanceof Error?e.message:'Could not reorder sections.')}finally{setSaving(false)}}
+ return <div className="zorah-cms-editor"><div className="zorah-cms-toolbar"><div><strong>Homepage editor</strong><span>{sections.length} sections · {heroes.length}/5 hero slides</span></div><div className="zorah-cms-toolbar-actions"><button type="button" onClick={()=>void load()} disabled={loading||saving}>Refresh</button><a href="/" target="_blank" rel="noreferrer">Preview homepage ↗</a></div></div>{(error||message)&&<div className={`zorah-cms-alert ${error?'is-error':''}`} role={error?'alert':'status'}>{error||message}</div>}
+ <div className="zorah-cms-grid"><form className="zorah-cms-form" onSubmit={save}><div className="zorah-cms-form-head"><div><span>{editingId?'Editing section':'Create section'}</span><h2>{editingId?form.title||form.section_key:'Add homepage content'}</h2></div>{editingId&&<button type="button" onClick={reset}>Cancel</button>}</div>
+ <label>Section name / key<input required value={form.section_key} onChange={e=>update('section_key',e.target.value)} placeholder="hero-01, story, site-logo"/></label><div className="zorah-cms-two"><label>Section type<select value={form.section_type} onChange={e=>update('section_type',e.target.value)}>{TYPES.map(type=><option key={type}>{type}</option>)}</select></label><label>Display order<input type="number" min="0" max="10000" value={form.sort_order} onChange={e=>update('sort_order',e.target.value)}/></label></div><label>Eyebrow / small label<input value={form.eyebrow||''} onChange={e=>update('eyebrow',e.target.value)} placeholder="Optional"/></label><label>Headline / title<input value={form.title||''} onChange={e=>update('title',e.target.value)} placeholder="What customers should read"/></label><label>Body copy<textarea rows={6} value={form.body||''} onChange={e=>update('body',e.target.value)} placeholder="Keep it clear, confident and human."/></label>
+ <div className="zorah-cms-group"><h3>Actions</h3><div className="zorah-cms-two"><label>Primary button<input value={form.primary_cta_label||''} onChange={e=>update('primary_cta_label',e.target.value)} placeholder="Shop handbags"/></label><label>Primary link<input value={form.primary_cta_href||''} onChange={e=>update('primary_cta_href',e.target.value)} placeholder="/shop"/></label><label>Secondary button<input value={form.secondary_cta_label||''} onChange={e=>update('secondary_cta_label',e.target.value)} placeholder="Our story"/></label><label>Secondary link<input value={form.secondary_cta_href||''} onChange={e=>update('secondary_cta_href',e.target.value)} placeholder="/our-story"/></label></div></div>
+ <div className="zorah-cms-media"><div className="zorah-cms-media-head"><div><h3>Section image</h3><p>Replace the image on this section at any time.</p></div>{(form.media_path||preview)&&<button type="button" onClick={()=>{revokePreview();update('media_path','');update('media_url','');setFile(null);setPreview(null)}}>Remove image</button>}</div>{(preview||form.media_url)?<img src={preview||form.media_url} alt="Selected section artwork"/>:<div className="zorah-cms-media-empty">No image attached</div>}<input type="file" accept={IMAGE_TYPES.join(',')} onChange={e=>chooseImage(e.target.files?.[0]||null)}/>{file&&<button type="button" onClick={()=>void uploadImage()} disabled={saving}>{saving?'Uploading…':'Upload selected image'}</button>}</div>
+ <div className="zorah-cms-two"><label>Theme<select value={form.theme} onChange={e=>update('theme',e.target.value)}>{THEMES.map(theme=><option key={theme}>{theme}</option>)}</select></label><label>Status<select value={form.status} onChange={e=>update('status',e.target.value)}>{STATUSES.map(status=><option key={status}>{status}</option>)}</select></label></div><label>Schedule publish<input type="datetime-local" value={form.scheduled_publish_at||''} onChange={e=>update('scheduled_publish_at',e.target.value||null)}/></label><label className="zorah-cms-check"><input type="checkbox" checked={form.is_enabled} onChange={e=>update('is_enabled',e.target.checked)}/> Visible on customer homepage</label><button className="zorah-cms-save" disabled={saving}>{saving?'Saving…':editingId?'Save changes':'Create section'}</button></form>
+ <section className="zorah-cms-list"><div className="zorah-cms-list-head"><div><span>Live structure</span><h2>Homepage sections</h2></div><button type="button" onClick={reset}>+ New section</button></div><div className="zorah-cms-list-help">Every saved section below is the current CMS record. Select <strong>Edit</strong> to change its text, image, buttons, theme, visibility, publishing status or order.</div>{loading?<div className="zorah-cms-empty">Loading homepage content…</div>:!sections.length?<div className="zorah-cms-empty"><strong>No homepage sections</strong><p>The database returned no sections. Use <strong>+ New section</strong> to create the first one.</p></div>:<div className="zorah-cms-items">{sections.map((section,index)=><article className={`zorah-cms-item ${editingId===section.id?'is-editing':''}`} key={section.id}><div className="zorah-cms-thumb">{section.media_url?<img src={section.media_url} alt=""/>:<span>{section.section_type==='hero'?'H':'Z'}</span>}</div><div className="zorah-cms-item-main"><h3>{section.title||section.section_key}</h3><p>{section.section_type} · {section.status}{section.is_enabled?'':' · hidden'} · order {section.sort_order}</p></div><div className="zorah-cms-item-actions"><button type="button" onClick={()=>edit(section)}>Edit</button><button type="button" onClick={()=>void remove(section.id)} disabled={saving}>Remove</button><div className="zorah-cms-order"><button type="button" aria-label="Move section up" onClick={()=>void move(index,-1)} disabled={index===0||saving}>↑</button><button type="button" aria-label="Move section down" onClick={()=>void move(index,1)} disabled={index===sections.length-1||saving}>↓</button></div></div></article>)}</div>}</section></div></div>
 }
