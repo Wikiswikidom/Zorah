@@ -5,6 +5,7 @@ import "./landing.css";
 import "./landing-responsive.css";
 import "./login.css";
 import "./account.css";
+import "./orders.css";
 import "./storefront-commerce.css";
 import "./admin-ui.css";
 import "./storefront-header.css";
