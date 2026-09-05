@@ -43,8 +43,8 @@ export default function BrandingPanel() {
     if (!file || saving) return
     setSaving(key); setError(''); setMessage('')
     try {
-      const form = new FormData(); form.append('file', file)
-      const upload = await fetch('/api/admin/content/media', { method: 'POST', body: form })
+      const form = new FormData(); form.append('file', file); form.append('kind', key === 'site_logo' ? 'logo' : 'favicon')
+      const upload = await fetch('/api/admin/branding/media', { method: 'POST', body: form })
       const uploaded = await upload.json().catch(() => ({}))
       if (!upload.ok) throw new Error(uploaded.error || 'Image upload failed.')
       const response = await fetch('/api/admin/branding', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key, media_path: uploaded.path }) })
@@ -74,7 +74,7 @@ export default function BrandingPanel() {
     const current = settings[key]
     const image = previews[key] || current?.media_url || ''
     return <article className="zorah-brand-card">
-      <div className="zorah-brand-card-copy"><div><span>Brand asset</span><h3>{title}</h3><p>{description}</p></div><div className="zorah-brand-preview">{image ? <img src={image} alt={`${title} preview`} /> : <strong>{key === 'site_logo' ? 'Z' : 'Z'}</strong>}</div></div>
+      <div className="zorah-brand-card-copy"><div><span>Brand asset</span><h3>{title}</h3><p>{description}</p></div><div className="zorah-brand-preview">{image ? <img src={image} alt={`${title} preview`} /> : <strong>Z</strong>}</div></div>
       <div className="zorah-brand-actions"><label className="zorah-brand-file">Choose image<input type="file" accept={ACCEPT} onChange={e => choose(key, e.target.files?.[0] || null)} /></label><button type="button" onClick={() => void save(key)} disabled={!files[key] || saving !== null}>{saving === key ? 'Uploading…' : `Save ${key === 'site_logo' ? 'logo' : 'favicon'}`}</button>{current?.media_path && <button type="button" className="danger" onClick={() => void remove(key)} disabled={saving !== null}>Remove</button>}</div>
       <small>{files[key]?.name || (current?.media_path ? 'Currently active' : 'No asset selected')}</small>
     </article>
