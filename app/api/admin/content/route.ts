@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/authorization'
+import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 const types=new Set(['hero','promo','product_rail','editorial','craft','collections','custom_order','journal','testimonial','newsletter','media'])
@@ -23,28 +24,23 @@ function parse(body:unknown){
   return{data:{section_key,section_type,eyebrow:text(b.eyebrow,120)||null,title:text(b.title,240)||null,body:text(b.body,3000)||null,primary_cta_label:text(b.primary_cta_label,80)||null,primary_cta_href,secondary_cta_label:text(b.secondary_cta_label,80)||null,secondary_cta_href,media_path:text(b.media_path,500)||null,theme,is_enabled:b.is_enabled!==false,sort_order,status,scheduled_publish_at}}
 }
 
-async function signedSections(storageClient:ReturnType<typeof createAdminClient>,data:any[]){
+async function publicSections(data:any[]){
+  const supabase=await createClient()
   return Promise.all((data??[]).map(async section=>{
     if(!section.media_path)return{...section,media_url:null}
-    const result=await storageClient.storage.from('product-media').createSignedUrl(section.media_path,3600)
-    return{...section,media_url:result.data?.signedUrl??null}
+    const {data:publicData}=supabase.storage.from('landing-media').getPublicUrl(section.media_path)
+    return{...section,media_url:publicData.publicUrl||null}
   }))
 }
 
 export async function GET(){
   try{
-    // Authentication/authorization is checked first. After that, use the
-    // server-only admin client for the CMS read so a restrictive RLS policy
-    // can never make the editor appear empty to an authorized staff member.
     await requireRole(['content_admin','marketing_admin'])
-    const supabase=createAdminClient()
+    const supabase=await createClient()
     const{data,error}=await supabase.from('landing_sections').select('id,section_key,section_type,eyebrow,title,body,primary_cta_label,primary_cta_href,secondary_cta_label,secondary_cta_href,media_path,theme,is_enabled,sort_order,status,scheduled_publish_at,published_at,created_at,updated_at').order('sort_order').order('created_at')
     if(error){console.error('Landing CMS GET query failed',error);return jsonError('Could not load landing-page content.',500)}
-    return NextResponse.json({sections:await signedSections(supabase,data??[])})
-  }catch(error){
-    console.error('Landing CMS GET failed',error)
-    return jsonError('Unable to load landing-page content.',500)
-  }
+    return NextResponse.json({sections:await publicSections(data??[])},{headers:{'Cache-Control':'no-store'}})
+  }catch(error){console.error('Landing CMS GET failed',error);return jsonError('Unable to load landing-page content.',500)}
 }
 
 export async function POST(request:Request){
