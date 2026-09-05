@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import StorefrontHome from '@/components/landing/storefront-home'
-import './landing.css'
+import '../landing.css'
 import '../landing-responsive.css'
 import '../landing-cms.css'
 
