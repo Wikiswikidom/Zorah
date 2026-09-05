@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { requireRole } from '@/lib/auth/authorization'
 import LandingCmsPanel from '@/components/admin/landing-cms-panel'
+import BrandingPanel from '@/components/admin/branding-panel'
 
 export default async function AdminContentPage(){
   await requireRole(['content_admin','marketing_admin'])
@@ -15,6 +16,7 @@ export default async function AdminContentPage(){
         <h1>Homepage editor</h1>
         <p>Edit the actual Zorah customer homepage from one place: logo, hero slides, images, copy, buttons, visibility and section order. No code changes are required.</p>
       </div>
+      <BrandingPanel />
       <LandingCmsPanel/>
     </section>
   </main>
