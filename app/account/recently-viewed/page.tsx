@@ -1,11 +1,11 @@
-"use client"
 import Link from 'next/link'
-import { useCommerce } from '@/components/commerce-provider'
-import { products } from '@/lib/catalog'
-import { StorefrontHeader } from '@/components/storefront-header'
+import {createClient} from '@/lib/supabase/server'
+import {StorefrontHeader} from '@/components/storefront-header'
+import {RecentlyViewedContent} from '@/components/recently-viewed-content'
 
-export default function RecentlyViewedPage(){
- const {recentlyViewed}=useCommerce()
- const items=recentlyViewed.map(slug=>products.find(p=>p.slug===slug)).filter(Boolean)
- return <main className="jumia-market-page"><StorefrontHeader/><div className="jumia-market-wrap"><div className="jumia-breadcrumb"><Link href="/">Home</Link><span>›</span><Link href="/account">My Account</Link><span>›</span>Recently Viewed</div><div className="jumia-page-title-row"><h1>Recently Viewed</h1><span>{items.length} item{items.length===1?'':'s'}</span></div>{!items.length?<div className="jumia-empty-card"><div className="jumia-empty-icon">◷</div><h2>No recently viewed products</h2><p>Products you open will appear here for quick access.</p><Link className="jumia-primary-btn" href="/shop">Browse Products</Link></div>:<div className="jumia-product-grid">{items.map(product=>product&&<Link href={`/products/${product.slug}`} className="jumia-product-card" key={product.slug}><div className={`jumia-product-image tone-${product.tone}`}><span>Z</span></div><div className="jumia-product-body"><h2>{product.name}</h2><p>{product.category}</p><strong>{product.priceValue?`₦${product.priceValue.toLocaleString('en-NG')}`:'Price on request'}</strong></div></Link>)}</div>}</div></main>
+export default async function RecentlyViewedPage(){
+ const supabase=await createClient();const{data:{user}}=await supabase.auth.getUser();
+ if(!user)return <main className="jumia-market-page"><StorefrontHeader/><div className="jumia-market-wrap"><div className="jumia-breadcrumb"><Link href="/shop">Home</Link><span>›</span><Link href="/account">My Account</Link><span>›</span>Recently Viewed</div><div className="jumia-page-title-row"><h1>Recently Viewed</h1><span>Your browsing history</span></div><div className="jumia-empty-card"><div className="jumia-empty-icon">◷</div><h2>Sign in to see your history</h2><p>Your recently viewed bags are saved to your Zorah account.</p><Link className="jumia-primary-btn" href="/login?next=/account/recently-viewed">Login / Sign up</Link></div></div></main>
+ const{count}=await supabase.from('customer_recently_viewed').select('product_id',{count:'exact',head:true}).eq('user_id',user.id);
+ return <main className="jumia-market-page"><StorefrontHeader/><div className="jumia-market-wrap"><div className="jumia-breadcrumb"><Link href="/shop">Home</Link><span>›</span><Link href="/account">My Account</Link><span>›</span>Recently Viewed</div><div className="jumia-page-title-row"><h1>Recently Viewed</h1><span>{count??0} item{count===1?'':'s'}</span></div><RecentlyViewedContent/></div></main>
 }
