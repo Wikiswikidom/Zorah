@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/authorization'
-import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 const types=new Set(['hero','promo','product_rail','editorial','craft','collections','custom_order','journal','testimonial','newsletter','media'])
@@ -24,8 +23,7 @@ function parse(body:unknown){
   return{data:{section_key,section_type,eyebrow:text(b.eyebrow,120)||null,title:text(b.title,240)||null,body:text(b.body,3000)||null,primary_cta_label:text(b.primary_cta_label,80)||null,primary_cta_href,secondary_cta_label:text(b.secondary_cta_label,80)||null,secondary_cta_href,media_path:text(b.media_path,500)||null,theme,is_enabled:b.is_enabled!==false,sort_order,status,scheduled_publish_at}}
 }
 
-async function publicSections(data:any[]){
-  const supabase=await createClient()
+async function withMediaUrls(supabase:ReturnType<typeof createAdminClient>,data:any[]){
   return Promise.all((data??[]).map(async section=>{
     if(!section.media_path)return{...section,media_url:null}
     const {data:publicData}=supabase.storage.from('landing-media').getPublicUrl(section.media_path)
@@ -36,11 +34,11 @@ async function publicSections(data:any[]){
 export async function GET(){
   try{
     await requireRole(['content_admin','marketing_admin'])
-    const supabase=await createClient()
+    const supabase=createAdminClient()
     const{data,error}=await supabase.from('landing_sections').select('id,section_key,section_type,eyebrow,title,body,primary_cta_label,primary_cta_href,secondary_cta_label,secondary_cta_href,media_path,theme,is_enabled,sort_order,status,scheduled_publish_at,published_at,created_at,updated_at').order('sort_order').order('created_at')
     if(error){console.error('Landing CMS GET query failed',error);return jsonError('Could not load landing-page content.',500)}
-    return NextResponse.json({sections:await publicSections(data??[])},{headers:{'Cache-Control':'no-store'}})
-  }catch(error){console.error('Landing CMS GET failed',error);return jsonError('Unable to load landing-page content.',500)}
+    return NextResponse.json({sections:await withMediaUrls(supabase,data??[])},{headers:{'Cache-Control':'no-store'}})
+  }catch(error){console.error('Landing CMS GET failed',error);return jsonError(error instanceof Error?error.message:'Unable to load landing-page content.',500)}
 }
 
 export async function POST(request:Request){
@@ -53,12 +51,13 @@ export async function POST(request:Request){
     if(!parsedData)return jsonError('Invalid landing-section payload.',500)
     const supabase=createAdminClient()
     if(parsedData.section_type==='hero'){
-      const{count}=await supabase.from('landing_sections').select('id',{count:'exact',head:true}).eq('section_type','hero').neq('status','archived')
+      const{count,error}=await supabase.from('landing_sections').select('id',{count:'exact',head:true}).eq('section_type','hero').neq('status','archived')
+      if(error)return jsonError('Could not validate hero slide limit.',500)
       if((count??0)>=5)return jsonError('Zorah supports a maximum of 5 hero slides.',409)
     }
     const{data,error}=await supabase.from('landing_sections').insert({...parsedData,created_by:user.id,updated_by:user.id,published_at:parsedData.status==='published'?new Date().toISOString():null}).select('id').single()
     if(error)return jsonError(error.code==='23505'?'A section with this key already exists.':'Could not create section.',error.code==='23505'?409:400)
     revalidatePath('/')
     return NextResponse.json({id:data.id},{status:201})
-  }catch(error){console.error('Landing CMS POST failed',error);return jsonError('Unable to create landing section.',500)}
+  }catch(error){console.error('Landing CMS POST failed',error);return jsonError(error instanceof Error?error.message:'Unable to create landing section.',500)}
 }
