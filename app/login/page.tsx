@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { signInWithGoogle, signInWithPassword, signUpWithPassword } from './actions'
 import { AuthSubmitButton } from '@/components/auth-submit-button'
 
@@ -24,14 +25,14 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   return (
     <main className="login-page">
       <section className="login-brand" aria-label="Zorah brand">
-        <div className="login-brand-top"><a href="/" aria-label="Zorah home"><img className="login-brand-logo" src="/brand/zorah-wordmark.svg" alt="Zorah" /></a><a className="login-brand-link" href="/shop">Enter shop ↗</a></div>
+        <div className="login-brand-top"><Link href="/" aria-label="Zorah home"><img className="login-brand-logo" src="/brand/zorah-wordmark.svg" alt="Zorah" /></Link><a className="login-brand-link" href="/shop">Enter shop ↗</a></div>
         <div className="login-brand-copy"><p className="login-kicker">Zorah Handbags · Lagos</p><h1>Come in.<br /><em>Stay awhile.</em></h1><p>Your account keeps your collection, orders and saved pieces together.</p></div>
         <div className="login-brand-bottom"><span>Crafted to be carried</span><span>Lagos · Nigeria</span></div>
       </section>
 
       <section className="login-panel">
         <div className="login-card">
-          <a className="login-back" href="/">← Back to Zorah</a>
+          <Link className="login-back" href="/">← Back to Zorah</Link>
           <h2>{signupOpen ? 'Create your account' : 'Welcome back'}</h2>
           <p>{signupOpen ? 'Join Zorah and keep your collection close.' : 'Sign in to manage your account, orders and saved pieces.'}</p>
 
