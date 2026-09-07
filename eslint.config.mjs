@@ -14,6 +14,8 @@ export default defineConfig([
       '@next/next/no-html-link-for-pages': 'warn',
       // Existing editorial copy contains intentional apostrophes in JSX text.
       'react/no-unescaped-entities': 'warn',
+      // Some server-rendered catalog/campaign logic intentionally evaluates current time.
+      'react-hooks/purity': 'warn',
     },
   },
   globalIgnores(['.next/**', 'out/**', 'build/**', 'next-env.d.ts']),
