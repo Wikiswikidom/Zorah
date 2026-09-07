@@ -1,7 +1,7 @@
-import { AuthLanding } from "@/components/auth-landing";
+import StorefrontHome from "@/components/landing/storefront-home";
 
 export const dynamic = "force-dynamic";
 
 export default function Home() {
-  return <AuthLanding />;
+  return <StorefrontHome />;
 }
