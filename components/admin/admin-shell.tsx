@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { adminLogout } from "@/app/admin/actions";
 
 type StaffRole='super_admin'|'catalog_admin'|'order_admin'|'content_admin'|'marketing_admin'|'ads_admin'|'support_admin'|'analytics_admin'|'operations_admin';
@@ -17,6 +17,7 @@ const permissions:Record<StaffRole,string[]>={super_admin:groups.flatMap(g=>g.it
 
 export function AdminShell({children,role}:{children:React.ReactNode;role:StaffRole}){
   const pathname=usePathname();
+  const router=useRouter();
   const allowed=permissions[role]??[];
   const canCatalog=allowed.includes('/admin/products');
   const visibleGroups=groups.map(g=>({...g,items:g.items.filter(([,href])=>allowed.includes(href))})).filter(g=>g.items.length);
@@ -29,7 +30,8 @@ export function AdminShell({children,role}:{children:React.ReactNode;role:StaffR
       <div className="zorah-admin-sidebar-foot"><span className="zorah-admin-role-chip">{roleLabel}</span><Link href="/" className="zorah-admin-quiet-link">View brand site ↗</Link><Link href="/shop" className="zorah-admin-quiet-link">View storefront ↗</Link><form action={adminLogout}><button type="submit" className="zorah-admin-logout">Log out</button></form></div>
     </aside>
     <div className="zorah-admin-main">
-      <div className="zorah-admin-mobilebar"><Link href="/admin" className="zorah-admin-wordmark">ZORAH</Link><span className="zorah-admin-mobile-role">{roleLabel}</span><div className="zorah-admin-mobile-actions">{canCatalog&&<Link href="/admin/products/new">＋ Product</Link>}<Link href="/shop">Store ↗</Link><form action={adminLogout}><button type="submit">Log out</button></form></div></div>
+      <div className="zorah-admin-mobilebar"><Link href="/admin" className="zorah-admin-wordmark">ZORAH</Link><button type="button" className="zorah-admin-back" onClick={()=>router.back()} aria-label="Go back">← Back</button><span className="zorah-admin-mobile-role">{roleLabel}</span><div className="zorah-admin-mobile-actions">{canCatalog&&<Link href="/admin/products/new">＋ Product</Link>}<Link href="/">Home ↗</Link><Link href="/shop">Store ↗</Link><form action={adminLogout}><button type="submit">Log out</button></form></div></div>
+      <div className="zorah-admin-desktop-backbar"><button type="button" onClick={()=>router.back()}>← Back</button><Link href="/">Home</Link><Link href="/shop">Storefront</Link></div>
       {children}
     </div>
   </div>
