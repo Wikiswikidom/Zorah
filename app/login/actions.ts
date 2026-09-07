@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
-function safeNextPath(value: FormDataEntryValue | null) { if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) return '/account'; return value }
+function safeNextPath(value: FormDataEntryValue | null) { if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//')) return '/'; return value }
 function loginPath(next:string,error:string){const admin=next==='/admin'||next.startsWith('/admin/');const path=admin?'/admin-login':'/login';return `${path}?error=${error}&next=${encodeURIComponent(next)}`}
 async function requestOrigin(){const configured=process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/,'');if(configured)return configured;const requestHeaders=await headers();const proto=requestHeaders.get('x-forwarded-proto')?.split(',')[0]?.trim()||'https';const host=requestHeaders.get('x-forwarded-host')||requestHeaders.get('host');return host?`${proto}://${host}`:''}
 function loginError(error:{message?:string;status?:number}|null){const message=error?.message?.toLowerCase()||'';if(error?.status===429||message.includes('rate limit'))return 'rate_limit';if(message.includes('email not confirmed'))return 'email_not_confirmed';return 'invalid'}
