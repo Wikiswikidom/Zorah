@@ -22,6 +22,14 @@ export async function updateSession(request: NextRequest) {
     },
   })
 
-  await supabase.auth.getClaims()
+  const { data: claimsData } = await supabase.auth.getClaims()
+
+  // The landing experience is public-facing brand content. Authenticated
+  // customers must stay inside the commerce application and are sent to the
+  // shop if they try to visit the landing route directly.
+  if (claimsData?.claims && request.nextUrl.pathname === '/landing') {
+    return NextResponse.redirect(new URL('/shop', request.url))
+  }
+
   return response
 }
