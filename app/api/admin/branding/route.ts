@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth/authorization'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 const KEYS=['site_logo','site_favicon'] as const
 const KEY_SET=new Set(KEYS)
 const BUCKET='brand-assets'
 const jsonError=(message:string,status=400)=>NextResponse.json({error:message},{status})
 
-function publicUrl(supabase:ReturnType<typeof createAdminClient>,path:string|null){
+function publicUrl(supabase:Awaited<ReturnType<typeof createClient>>,path:string|null){
  if(!path)return null
  return supabase.storage.from(BUCKET).getPublicUrl(path).data.publicUrl||null
 }
@@ -15,7 +15,7 @@ function publicUrl(supabase:ReturnType<typeof createAdminClient>,path:string|nul
 export async function GET(){
  try{
   await requireRole(['content_admin','marketing_admin'])
-  const supabase=createAdminClient()
+  const supabase=await createClient()
   const{data,error}=await supabase.from('site_settings').select('key,media_path,updated_at').in('key',KEYS)
   if(error){console.error('Brand settings GET query failed',error);return jsonError('Unable to load brand settings.',500)}
   const rows=data??[]
@@ -33,7 +33,7 @@ export async function POST(request:Request){
   const mediaPath=typeof body?.media_path==='string'?body.media_path.trim().slice(0,500):''
   if(!KEY_SET.has(key as typeof KEYS[number]))return jsonError('Invalid branding key.')
   if(!mediaPath||!mediaPath.startsWith('branding/'))return jsonError('Invalid brand asset path.')
-  const supabase=createAdminClient()
+  const supabase=await createClient()
   const{error}=await supabase.from('site_settings').upsert({key,media_path:mediaPath,updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:'key'})
   if(error){console.error('Brand setting save failed',error);return jsonError('Unable to save brand setting.',500)}
   return NextResponse.json({ok:true,key,media_path:mediaPath,media_url:publicUrl(supabase,mediaPath)})
@@ -45,7 +45,7 @@ export async function DELETE(request:Request){
   const{user}=await requireRole(['content_admin','marketing_admin'])
   const key=new URL(request.url).searchParams.get('key')||''
   if(!KEY_SET.has(key as typeof KEYS[number]))return jsonError('Invalid branding key.')
-  const supabase=createAdminClient()
+  const supabase=await createClient()
   const{data:existing}=await supabase.from('site_settings').select('media_path').eq('key',key).maybeSingle()
   const{error}=await supabase.from('site_settings').upsert({key,media_path:null,updated_by:user.id,updated_at:new Date().toISOString()},{onConflict:'key'})
   if(error){console.error('Brand setting delete failed',error);return jsonError('Unable to remove brand setting.',500)}
