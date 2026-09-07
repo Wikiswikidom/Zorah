@@ -23,7 +23,7 @@ export function StorefrontHeader(){
     <header className="store-header">
       <div className="store-topline"><div className="store-header-inner store-header-inner-top">
         <button type="button" className="store-menu" aria-label="Open menu" aria-expanded={menuOpen} onClick={()=>setMenuOpen(v=>!v)}>☰</button>
-        <Link href="/shop" className="store-logo" aria-label="Zorah shop">{logo?<img src={logo} alt="Zorah"/>:<span>ZORAH</span>}</Link>
+        <Link href="/" className="store-logo" aria-label="Zorah home">{logo?<img src={logo} alt="Zorah"/>:<span>ZORAH</span>}</Link>
         <nav className={`store-nav ${menuOpen?'is-open':''}`}>
           <Link href="/shop" onClick={()=>setMenuOpen(false)}>Shop</Link>
           <Link href="/collections" onClick={()=>setMenuOpen(false)}>Categories</Link>
@@ -40,11 +40,12 @@ export function StorefrontHeader(){
       <div className="store-mobile-search"><Link href="/search" aria-label="Search Zorah">⌕ <span>Search Zorah handbags, collections and more</span></Link><Link href="/cart" aria-label="Cart">🛒{cartCount>0&&<b>{cartCount}</b>}</Link></div>
     </header>
     <nav className="store-bottom-nav" aria-label="Primary mobile navigation">
-      <Link href="/shop"><span>⌂</span>Home</Link>
+      <Link href="/"><span>⌂</span>Home</Link>
       <Link href="/collections"><span>▦</span>Categories</Link>
       <Link href="/cart"><span className="nav-badge-wrap">🛒{cartCount>0&&<b>{cartCount}</b>}</span>Cart</Link>
       <Link href="/wishlist"><span>♡</span>Wishlist</Link>
       <Link href="/account"><span className="nav-badge-wrap">♙</span>Account</Link>
     </nav>
+    <style>{`@media (max-width:900px){.store-menu,.store-mobile-search{display:none!important}.store-header-inner-top{min-height:60px}.store-nav{display:none!important}.store-actions .store-search-link{display:none!important}.store-actions{margin-left:auto}}`}</style>
   </>
 }
