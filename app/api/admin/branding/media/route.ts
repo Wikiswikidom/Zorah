@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth/authorization'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const MAX=5*1024*1024
 const BUCKET='brand-assets'
 const TYPES=new Set(['image/png','image/jpeg','image/webp','image/svg+xml','image/x-icon','image/vnd.microsoft.icon','image/avif'])
 const EXTENSIONS:Record<string,string>={png:'png',jpg:'jpg',jpeg:'jpg',webp:'webp',svg:'svg',ico:'ico',avif:'avif'}
-
 const errorResponse=(message:string,status=400)=>NextResponse.json({error:message},{status})
 
 async function detectType(file:File){
@@ -43,9 +42,9 @@ export async function POST(request:Request){
     if(extension&&!EXTENSIONS[extension])return errorResponse('Unsupported file extension. Use PNG, JPG, JPEG, WebP, SVG, AVIF or ICO.')
     const ext=EXTENSIONS[extension]||EXTENSIONS[type.split('/')[1]]||'png'
     const path=`branding/${kind}-${crypto.randomUUID()}.${ext}`
-    const supabase=await createClient()
+    const supabase=createAdminClient()
     const upload=await supabase.storage.from(BUCKET).upload(path,file,{contentType:type,upsert:false,cacheControl:'31536000'})
-    if(upload.error){console.error('Brand asset storage upload failed',upload.error);return errorResponse('Could not upload brand artwork. Check the brand-assets storage permissions.',500)}
+    if(upload.error){console.error('Brand asset storage upload failed',upload.error);return errorResponse('Could not upload brand artwork.',500)}
     const{data}=supabase.storage.from(BUCKET).getPublicUrl(path)
     return NextResponse.json({path,url:data.publicUrl},{status:201})
   }catch(error){console.error('Brand asset upload failed',error);return errorResponse(error instanceof Error?error.message:'Unable to upload brand artwork.',500)}
