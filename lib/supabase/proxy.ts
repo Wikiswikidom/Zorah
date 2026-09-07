@@ -1,6 +1,21 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const COMMERCE_ROUTES = [
+  '/shop',
+  '/collections',
+  '/products',
+  '/search',
+  '/cart',
+  '/checkout',
+  '/wishlist',
+  '/account',
+]
+
+function isCommerceRoute(pathname: string) {
+  return COMMERCE_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`))
+}
+
 export async function updateSession(request: NextRequest) {
   let response = NextResponse.next({ request })
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -23,12 +38,21 @@ export async function updateSession(request: NextRequest) {
   })
 
   const { data: claimsData } = await supabase.auth.getClaims()
+  const isAuthenticated = Boolean(claimsData?.claims)
+  const pathname = request.nextUrl.pathname
 
-  // The landing experience is public-facing brand content. Authenticated
-  // customers must stay inside the commerce application and are sent to the
-  // shop if they try to visit the landing route directly.
-  if (claimsData?.claims && request.nextUrl.pathname === '/landing') {
+  // The landing route is a public brand/story experience. Authenticated
+  // customers are intentionally kept inside the commerce application.
+  if (isAuthenticated && pathname === '/landing') {
     return NextResponse.redirect(new URL('/shop', request.url))
+  }
+
+  // Commerce is the authenticated customer application. Preserve the exact
+  // destination so a visitor can finish signing in and continue where they
+  // started. APIs are intentionally excluded from this page-level guard.
+  if (!isAuthenticated && isCommerceRoute(pathname)) {
+    const next = `${pathname}${request.nextUrl.search}`
+    return NextResponse.redirect(new URL(`/login?next=${encodeURIComponent(next)}`, request.url))
   }
 
   return response
