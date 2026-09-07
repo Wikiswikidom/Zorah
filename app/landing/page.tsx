@@ -3,6 +3,7 @@ import StorefrontHome from '@/components/landing/storefront-home'
 import '../landing.css'
 import '../landing-responsive.css'
 import '../landing-cms.css'
+import './landing-public.css'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,5 +13,5 @@ export const metadata: Metadata = {
 }
 
 export default function LandingPage(){
-  return <StorefrontHome />
+  return <div className="landing-public"><StorefrontHome /></div>
 }
