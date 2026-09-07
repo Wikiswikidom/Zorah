@@ -1,0 +1,38 @@
+/* Public brand experience: keep commerce out of the landing page. */
+.landing-public [aria-label="Featured Zorah handbags"]{display:none!important}
+
+/* Mobile landing hero: keep the copy visually centred in the hero image. */
+@media (max-width:900px){
+  .landing-public .zorah-hero-inner{padding:68px 22px 34px;align-items:center;justify-content:center;text-align:center}
+  .landing-public .zorah-hero-copy{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;max-width:100%;padding-bottom:0;margin:auto}
+  .landing-public .zorah-lede{margin:22px auto;max-width:480px}
+  .landing-public .zorah-actions{justify-content:center}
+  .landing-public .hero-slide-controls{left:22px;right:22px;bottom:22px}
+}
+
+@media (max-width:560px){
+  .landing-public .zorah-hero-inner{padding-left:16px;padding-right:16px}
+  .landing-public .zorah-hero-copy{padding-bottom:0}
+  .landing-public .zorah-lede{margin-left:auto;margin-right:auto}
+  .landing-public .zorah-actions{justify-content:center}
+}
+
+/* Give the uploaded wordmark enough visual presence without increasing header height. */
+.landing-public .zorah-logo img{width:142px;max-width:142px;max-height:48px;object-fit:contain}
+@media (max-width:900px){.landing-public .zorah-logo img{width:116px;max-width:116px;max-height:42px}}
+
+/* Ensure light CTA treatments always have readable dark text. */
+.landing-public .zorah-btn-light{color:var(--ink)!important;background:var(--ivory)!important;border-color:var(--ivory)!important;text-shadow:none}
+.landing-public .zorah-btn-dark{color:var(--ink)!important;background:#fff!important;border-color:#fff!important;text-shadow:none}
+
+/* Avoid text becoming unreadable when CMS media has a light/white focal area. */
+.landing-public .zorah-hero h1,
+.landing-public .zorah-hero .zorah-lede{text-shadow:0 2px 18px rgba(0,0,0,.28)}
+.landing-public .zorah-cta-section .zorah-display,
+.landing-public .zorah-cta-section .zorah-body{text-shadow:0 1px 12px rgba(0,0,0,.22)}
+
+/* Responsive footer safety for narrow screens. */
+@media (max-width:900px){
+  .landing-public .zorah-footer{display:grid;grid-template-columns:1fr;gap:24px}
+  .landing-public .zorah-footer a,.landing-public .zorah-footer span{min-height:32px;display:inline-flex;align-items:center}
+}
