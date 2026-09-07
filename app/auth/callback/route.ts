@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { NextResponse, type NextRequest } from 'next/server'
 
 function safeNextPath(value: string | null) {
-  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/'
+  if (!value || !value.startsWith('/') || value.startsWith('//')) return '/shop'
+  if (value === '/' || value === '/landing' || value.startsWith('/landing/')) return '/shop'
   return value
 }
 
