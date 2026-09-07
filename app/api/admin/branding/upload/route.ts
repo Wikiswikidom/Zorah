@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth/authorization'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 
 const ALLOWED = new Set(['image/png','image/jpeg','image/webp','image/svg+xml','image/x-icon','image/vnd.microsoft.icon','image/avif'])
 const MAX = 5 * 1024 * 1024
@@ -34,7 +34,7 @@ export async function POST(request: Request) {
 
     const extension = file.type === 'image/jpeg' ? 'jpg' : file.type === 'image/x-icon' || file.type === 'image/vnd.microsoft.icon' ? 'ico' : file.type.split('/')[1]
     const path = `branding/${key}/${crypto.randomUUID()}.${extension}`
-    const supabase = createAdminClient()
+    const supabase = await createClient()
     const upload = await supabase.storage.from(BUCKET).upload(path, file, { contentType: file.type, cacheControl: '31536000', upsert: false })
     if (upload.error) {
       console.error('Branding upload failed', upload.error)
