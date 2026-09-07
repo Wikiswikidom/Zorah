@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { requireRole } from '@/lib/auth/authorization'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 const types=new Set(['hero','promo','product_rail','editorial','craft','collections','custom_order','journal','testimonial','newsletter','media'])
 const themes=new Set(['light','dark','leather','green','ivory'])
@@ -30,7 +31,10 @@ async function withMediaUrls(supabase:Awaited<ReturnType<typeof createClient>>,d
 export async function GET(){
   try{
     await requireRole(['content_admin','marketing_admin'])
-    const supabase=await createClient()
+    // Authorization is performed with the user's session above. Once authorized,
+    // use the server-only client for the CMS read so RLS cannot make an existing
+    // homepage appear empty to the editor.
+    const supabase=createAdminClient()
     const{data,error}=await supabase.from('landing_sections').select('id,section_key,section_type,eyebrow,title,body,primary_cta_label,primary_cta_href,secondary_cta_label,secondary_cta_href,media_path,theme,is_enabled,sort_order,status,scheduled_publish_at,published_at,created_at,updated_at').order('sort_order').order('created_at')
     if(error){console.error('Landing CMS GET query failed',error);return jsonError('Could not load landing-page content.',500)}
     return NextResponse.json({sections:await withMediaUrls(supabase,data??[])},{headers:{'Cache-Control':'no-store'}})
