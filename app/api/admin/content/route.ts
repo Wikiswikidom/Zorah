@@ -24,16 +24,13 @@ function parse(body:unknown){
   return{data:{section_key,section_type,eyebrow:text(b.eyebrow,120)||null,title:text(b.title,240)||null,body:text(b.body,3000)||null,primary_cta_label:text(b.primary_cta_label,80)||null,primary_cta_href,secondary_cta_label:text(b.secondary_cta_label,80)||null,secondary_cta_href,media_path:text(b.media_path,500)||null,theme,is_enabled:b.is_enabled!==false,sort_order,status,scheduled_publish_at}}
 }
 
-async function withMediaUrls(supabase:Awaited<ReturnType<typeof createClient>>,data:any[]){
+async function withMediaUrls(supabase:ReturnType<typeof createAdminClient>,data:any[]){
   return Promise.all((data??[]).map(async section=>{if(!section.media_path)return{...section,media_url:null};const {data:publicData}=supabase.storage.from('landing-media').getPublicUrl(section.media_path);return{...section,media_url:publicData.publicUrl||null}}))
 }
 
 export async function GET(){
   try{
     await requireRole(['content_admin','marketing_admin'])
-    // Authorization is performed with the user's session above. Once authorized,
-    // use the server-only client for the CMS read so RLS cannot make an existing
-    // homepage appear empty to the editor.
     const supabase=createAdminClient()
     const{data,error}=await supabase.from('landing_sections').select('id,section_key,section_type,eyebrow,title,body,primary_cta_label,primary_cta_href,secondary_cta_label,secondary_cta_href,media_path,theme,is_enabled,sort_order,status,scheduled_publish_at,published_at,created_at,updated_at').order('sort_order').order('created_at')
     if(error){console.error('Landing CMS GET query failed',error);return jsonError('Could not load landing-page content.',500)}
