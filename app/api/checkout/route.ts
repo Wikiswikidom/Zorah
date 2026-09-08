@@ -15,15 +15,18 @@ export async function POST(request:Request){
     const body=await request.json().catch(()=>null)
     if(!body||typeof body!=='object'||!Array.isArray(body.items))return NextResponse.json({error:'Your bag could not be read.'},{status:400})
 
-    const name=text((body as Record<string,unknown>).customer_name??(body as Record<string,unknown>).full_name,120)
+    const input=body as Record<string,unknown>
+    const name=text(input.customer_name??input.full_name,120)
     const email=(user.email||'').trim().toLowerCase()
-    const phone=text(body.phone,40)
-    const address1=text(body.address_line1,240)
-    const address2=text(body.address_line2,240)
-    const city=text(body.city,100)
-    const state=text(body.state,100)
-    const country=text(body.country,80)||'Nigeria'
+    const phone=text(input.phone,40)
+    const address1=text(input.address_line1,240)
+    const address2=text(input.address_line2,240)
+    const city=text(input.city,100)
+    const state=text(input.state,100)
+    const country=text(input.country,80)||'Nigeria'
+    const termsAccepted=input.termsAccepted===true
     if(!name||!email||!phone||!address1||!city||!state||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return NextResponse.json({error:'Complete your name, email, phone and delivery address.'},{status:400})
+    if(!termsAccepted)return NextResponse.json({error:'Please read and accept the Terms & Conditions before continuing to payment.'},{status:400})
 
     const parsed:CartRequestItem[]=body.items.slice(0,50).map((x:unknown)=>{
       const i=x as Record<string,unknown>
@@ -31,8 +34,6 @@ export async function POST(request:Request){
     })
     if(!parsed.length||parsed.some(i=>!i.slug||!Number.isInteger(i.quantity)||i.quantity<1||i.quantity>99))return NextResponse.json({error:'Your bag contains an invalid item.'},{status:400})
 
-    // Consolidate duplicate cart lines before validating stock so a crafted request
-    // cannot split one variant across multiple lines to bypass the stock check.
     const itemMap=new Map<string,CartRequestItem>()
     for(const item of parsed){
       const key=`${item.slug}\u0000${item.variant}`
@@ -44,6 +45,8 @@ export async function POST(request:Request){
     const items=[...itemMap.values()]
 
     const admin=createAdminClient()
+    const{data:terms}=await admin.from('legal_pages').select('version').eq('slug','terms-and-conditions').eq('is_published',true).maybeSingle()
+    const termsVersion=text(terms?.version,40)||'1.0'
     const slugs=[...new Set(items.map(i=>i.slug))]
     const{data:products,error:pe}=await admin.from('products').select('id,slug,name,base_price,currency,status').in('slug',slugs).eq('status','published')
     if(pe||!products||products.length!==slugs.length)return NextResponse.json({error:'One or more products are no longer available.'},{status:409})
@@ -69,7 +72,7 @@ export async function POST(request:Request){
     const subtotal=lines.reduce((sum,x)=>sum+x.line_total,0)
     if(!Number.isSafeInteger(Math.round(subtotal*100))||subtotal<0)return NextResponse.json({error:'The order total is invalid.'},{status:409})
     const orderNumber=`ZOR-${new Date().toISOString().slice(0,10).replaceAll('-','')}-${crypto.randomUUID().slice(0,8).toUpperCase()}`
-    const{data:order,error:oe}=await admin.from('orders').insert({order_number:orderNumber,user_id:user.id,customer_name:name,email,phone,address_line1:address1,address_line2:address2||null,city,state,country,subtotal,delivery_fee:0,total:subtotal,currency:'NGN',status:'pending',payment_status:'unpaid'}).select('id,order_number,total').single()
+    const{data:order,error:oe}=await admin.from('orders').insert({order_number:orderNumber,user_id:user.id,customer_name:name,email,phone,address_line1:address1,address_line2:address2||null,city,state,country,subtotal,delivery_fee:0,total:subtotal,currency:'NGN',status:'pending',payment_status:'unpaid',terms_accepted_at:new Date().toISOString(),terms_version:termsVersion}).select('id,order_number,total').single()
     if(oe||!order)return NextResponse.json({error:'Could not create your order.'},{status:500})
 
     const{error:ie}=await admin.from('order_items').insert(lines.map(x=>({...x,order_id:order.id})))
@@ -86,5 +89,5 @@ export async function POST(request:Request){
     await admin.from('orders').update({paystack_reference:order.order_number}).eq('id',order.id)
     await admin.from('payments').insert({order_id:order.id,provider:'paystack',reference:order.order_number,amount:order.total,currency:'NGN',status:'initialized',metadata:{channel:result.data.channel??null}})
     return NextResponse.json({orderId:order.id,orderNumber:order.order_number,paymentUrl:result.data.authorization_url,paymentSetupRequired:false})
-  }catch{return NextResponse.json({error:'Checkout could not be completed right now.'},{status:500})}
+  }catch(error){console.error('Checkout route failed',error);return NextResponse.json({error:'Checkout could not be completed right now.'},{status:500})}
 }
