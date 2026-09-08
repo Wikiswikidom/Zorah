@@ -12,6 +12,7 @@ const accountLinks = [
 const settingLinks = [
   { title: 'Address Book', text: 'Manage your saved delivery addresses', href: '/account/address-book' },
   { title: 'Account Management', text: 'Update your name, phone and account details', href: '/account/settings' },
+  { title: 'Password & Security', text: 'Change your password and protect your account', href: '/account/update-password' },
 ]
 
 export default async function AccountPage() {
@@ -41,7 +42,7 @@ export default async function AccountPage() {
           <div className="jumia-side-heading">Settings</div>
           {settingLinks.map(item => <Link href={item.href} className="jumia-side-link" key={item.title}><span>○</span>{item.title}<b>›</b></Link>)}
           {isStaff && <Link href="/admin" className="jumia-admin-link">Open admin dashboard <b>›</b></Link>}
-          <a href="/auth/signout" className="jumia-logout-side">↪ Log Out</a>
+          <form action="/auth/signout" method="post"><button className="jumia-logout-side" type="submit">↪ Log Out</button></form>
         </aside>
 
         <section className="jumia-account-content">
@@ -56,7 +57,7 @@ export default async function AccountPage() {
           <div className="jumia-info-card"><div><span>Name</span><strong>{name}</strong></div><div><span>Email</span><strong>{user.email}</strong></div><div><span>Phone</span><strong>{profile?.phone || user.user_metadata?.phone || 'Add a phone number'}</strong></div></div>
 
           <div className="jumia-help-strip"><div><strong>Need help?</strong><span>We’re here to help with your order, delivery or payment.</span></div><Link href="/help">Help &amp; Support ›</Link></div>
-          <div className="jumia-logout"><a href="/auth/signout">Log Out</a></div>
+          <div className="jumia-logout"><form action="/auth/signout" method="post"><button type="submit">Log Out</button></form></div>
         </section>
       </div>
     </div>
