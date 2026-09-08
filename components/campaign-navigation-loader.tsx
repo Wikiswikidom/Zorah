@@ -16,9 +16,7 @@ export default function CampaignNavigationLoader() {
   const pathname = usePathname()
   const [loading, setLoading] = useState(false)
 
-  useEffect(() => {
-    setLoading(false)
-  }, [pathname])
+  useEffect(() => setLoading(false), [pathname])
 
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
@@ -28,7 +26,6 @@ export default function CampaignNavigationLoader() {
       const anchor = target.closest("a")
       if (anchor instanceof HTMLAnchorElement && isInternalNavigation(anchor)) setLoading(true)
     }
-
     document.addEventListener("click", handleClick, true)
     return () => document.removeEventListener("click", handleClick, true)
   }, [])
@@ -38,6 +35,11 @@ export default function CampaignNavigationLoader() {
   return (
     <div className="zorah-navigation-loader" role="status" aria-live="polite" aria-label="Loading page">
       <span className="zorah-navigation-spinner" aria-hidden="true" />
+      <style jsx>{`
+        .zorah-navigation-loader { position: fixed; inset: 0; z-index: 10000; display: grid; place-items: center; pointer-events: none; background: rgba(247,243,236,.42); backdrop-filter: blur(3px); }
+        .zorah-navigation-spinner { width: 30px; height: 30px; border: 2px solid rgba(23,61,50,.22); border-top-color: #173d32; border-radius: 50%; animation: zorah-navigation-spin .7s linear infinite; box-shadow: 0 4px 18px rgba(17,17,17,.12); }
+        @keyframes zorah-navigation-spin { to { transform: rotate(360deg); } }
+      `}</style>
     </div>
   )
 }
