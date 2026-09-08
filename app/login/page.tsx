@@ -17,7 +17,7 @@ const errors: Record<string, string> = {
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = await searchParams
-  const next = typeof params.next === 'string' && params.next.startsWith('/') && !params.next.startsWith('//') ? params.next : '/account'
+  const next = typeof params.next === 'string' && params.next.startsWith('/') && !params.next.startsWith('//') ? params.next : '/shop'
   const error = typeof params.error === 'string' ? params.error : ''
   const message = typeof params.message === 'string' ? params.message : ''
   const signupOpen = error.startsWith('signup') || params.mode === 'signup'
@@ -42,7 +42,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           {!signupOpen && <>
             <form action={signInWithGoogle}>
               <input type="hidden" name="next" value={next} />
-              <AuthSubmitButton className="login-google" pendingLabel="Opening Google…"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.27c0-.7-.06-1.38-.18-2.03H12v3.84h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.2Z"/><path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31.92-2.55 0-4.71-1.72-5.48-4.04H3.27v2.53A9.75 9.75 0 0 0 12 21.75Z"/><path fill="#FBBC05" d="M6.52 13.82a5.86 5.86 0 0 1 0-3.64V7.65H3.27a9.75 9.75 0 0 0 0 8.7l3.25-2.53Z"/><path fill="#EA4335" d="M12 6.14c1.43 0 2.72.49 3.74 1.45l2.8-2.8C16.83 3.14 14.62 2.25 12 2.25a9.75 9.75 0 0 0-8.73 5.4l3.25 2.53C7.29 7.86 9.45 6.14 12 6.14Z"/></svg> Continue with Google</AuthSubmitButton>
+              <AuthSubmitButton className="login-google" pendingLabel="Opening Google…"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M21.35 12.27c0-.7-.06-1.38-.18-2.03H12v3.84h5.24a4.48 4.48 0 0 1-1.94 2.94v2.45h3.14c1.84-1.69 2.91-4.18 2.91-7.2Z"/><path fill="#34A853" d="M12 21.75c2.63 0 4.84-.87 6.45-2.36l-3.14-2.45c-.87.58-1.98.92-3.31-0.92-2.55 0-4.71-1.72-5.48-4.04H3.27v2.53A9.75 9.75 0 0 0 12 21.75Z"/><path fill="#FBBC05" d="M6.52 13.82a5.86 5.86 0 0 1 0-3.64V7.65H3.27a9.75 9.75 0 0 0 0 8.7l3.25-2.53Z"/><path fill="#EA4335" d="M12 6.14c1.43 0 2.72 0.49 3.74 1.45l2.8-2.8C16.83 3.14 14.62 2.25 12 2.25a9.75 9.75 0 0 0-8.73 5.4l3.25 2.53C7.29 7.86 9.45 6.14 6.52 13.82Z"/></svg> Continue with Google</AuthSubmitButton>
             </form>
             <div className="login-divider"><i />or<i /></div>
             <form action={signInWithPassword} className="login-form">
@@ -65,7 +65,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             </form>
           </details>
 
-          <div className="login-footer-links"><a href="/shop">Shop</a><a href="/our-story">Our story</a><a href="/help">Help</a></div>
+          <div className="login-footer-links"><a href="/shop">Shop</a><a href="/our-story">Our story</a><a href="/terms-and-conditions">Terms</a><a href="/help">Help</a></div>
         </div>
       </section>
     </main>
