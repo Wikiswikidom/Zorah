@@ -7,7 +7,6 @@ const accountLinks = [
   { title: 'Orders', text: 'Track purchases, delivery and returns', icon: '▣', href: '/account/orders' },
   { title: 'Wishlist', text: 'Keep the pieces you are considering', icon: '♡', href: '/wishlist' },
   { title: 'Recently Viewed', text: 'Return to products you explored', icon: '◷', href: '/account/recently-viewed' },
-  { title: 'Vouchers & Offers', text: 'Your Zorah promotions and rewards', icon: '◇', href: '/account/vouchers' },
 ]
 
 const settingLinks = [
