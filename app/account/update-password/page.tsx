@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { AuthSubmitButton } from '@/components/auth-submit-button'
 import { StorefrontHeader } from '@/components/storefront-header'
 import { updatePassword } from './actions'
-import '../../../login.css'
 
 const errors: Record<string, string> = {
   weak: 'Your new password must be at least 10 characters long.',
