@@ -9,7 +9,7 @@ export type ProductVariantDetail = {
 export type Product = {
   slug: string; name: string; price: string; priceValue: number; category: string;
   tone: "brown" | "green" | "ivory" | "black"; colors: string[];
-  availability: "In stock" | "Made to order"; featuredRank: number;
+  availability: "In stock" | "Made to order" | "Unavailable"; featuredRank: number;
   description: string; details: string[]; variants: string[]; imageUrl?: string | null;
   variantDetails?: ProductVariantDetail[];
 };
