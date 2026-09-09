@@ -7,6 +7,7 @@ import './operations-ui.css'
 import './product-centre.css'
 import './content-ui.css'
 import './branding.css'
+import './admin-form-polish.css'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { role } = await requireStaff()
