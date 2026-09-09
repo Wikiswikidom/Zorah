@@ -79,7 +79,7 @@ export default function TermsEditor({ initialPage }: { initialPage: LegalPage })
 
       <div className="legal-editor-actions">
         <button type="button" onClick={save} disabled={saving} className="zorah-primary-action">
-          {saving ? <><LoadingSpinner size="sm" label="Saving" /> Saving…</> : 'Save changes'}
+          {saving ? <><LoadingSpinner size={14} label="Saving" /> Saving…</> : 'Save changes'}
         </button>
         <a href="/terms-and-conditions" target="_blank" rel="noreferrer" className="zorah-secondary-action">Preview customer page ↗</a>
       </div>
