@@ -30,15 +30,16 @@ export async function GET(request:Request){
     )
 
     if(paid){
-      const{error:updateError}=await admin.from('orders').update({payment_status:'paid',status:order.status==='pending'?'processing':order.status}).eq('id',order.id).neq('payment_status','refunded')
-      if(updateError)return NextResponse.json({error:'Could not update order status.'},{status:500})
-      const{error:paymentError}=await admin.from('payments').update({status:'paid',paid_at:new Date().toISOString(),metadata:{channel:paystackData?.channel??null}}).eq('reference',reference).eq('order_id',order.id)
-      if(paymentError)return NextResponse.json({error:'Payment was verified but its ledger could not be updated.'},{status:500})
+      const{error:finalizeError}=await admin.rpc('finalize_paid_order',{p_order_id:order.id,p_reference:reference,p_amount:order.total,p_currency:order.currency,p_channel:typeof paystackData?.channel==='string'?paystackData.channel:null})
+      if(finalizeError){
+        console.error('Paid order fulfillment failed',finalizeError)
+        return NextResponse.json({error:'Payment was confirmed, but the order could not be finalized safely. Our team needs to reconcile it before fulfillment.'},{status:409})
+      }
     }else if(order.payment_status!=='paid'&&order.payment_status!=='refunded'){
       await admin.from('orders').update({payment_status:'failed'}).eq('id',order.id).eq('payment_status','unpaid')
       await admin.from('payments').update({status:'failed'}).eq('reference',reference).eq('order_id',order.id).neq('status','paid')
     }
 
     return NextResponse.json({paid})
-  }catch{return NextResponse.json({error:'Unable to verify payment.'},{status:500})}
+  }catch(error){console.error('Payment verification failed',error);return NextResponse.json({error:'Unable to verify payment.'},{status:500})}
 }
