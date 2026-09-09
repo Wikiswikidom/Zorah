@@ -20,7 +20,9 @@ export default async function AccountPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/account')
   const { data: profile } = await supabase.from('profiles').select('full_name, role, is_active, phone').eq('id', user.id).maybeSingle()
-  if (!profile?.is_active || profile.role !== 'customer') redirect('/admin-login?next=/admin')
+  // A customer account must never fall into the staff authentication flow.
+  // Staff authenticate only through the dedicated Admin Portal.
+  if (!profile?.is_active || profile.role !== 'customer') redirect('/shop')
   const name = profile.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer'
   const firstName = name.split(' ')[0]
 
