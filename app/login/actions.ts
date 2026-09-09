@@ -11,7 +11,9 @@ function safeNextPath(value: FormDataEntryValue | null) {
 }
 function customerNextPath(value: FormDataEntryValue | null) {
   const next = safeNextPath(value)
-  return next === '/' || next === '/landing' || next.startsWith('/landing/') ? '/shop' : next
+  const isLanding = next === '/' || next === '/landing' || next.startsWith('/landing/')
+  const isAdmin = next === '/admin' || next.startsWith('/admin/') || next === '/admin-login' || next.startsWith('/admin-login/')
+  return isLanding || isAdmin ? '/shop' : next
 }
 function loginPath(next: string, error: string) {
   const admin = next === '/admin' || next.startsWith('/admin/')
