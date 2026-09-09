@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ProductCard } from "@/components/product-card";
 import { products as fallbackProducts, type Product } from "@/lib/catalog";
 import { createClient } from "@/lib/supabase/server";
@@ -27,5 +28,21 @@ export async function RelatedProducts({currentSlug}:{currentSlug:string}){
   }catch(error){console.error("Related products load failed",error)}
   if(!related.length)related=fallbackProducts.filter(p=>p.slug!==currentSlug).slice(0,3);
   if(!related.length)return null;
-  return <section className="section related-section"><div className="section-head"><div><p className="eyebrow">Complete the edit</p><h2 className="section-title">You may also like.</h2></div></div><div className="product-grid">{related.map(p=><ProductCard key={p.slug} {...p}/>)}</div></section>;
+
+  return <section className="section related-section" aria-labelledby="related-products-title">
+    <div className="related-head">
+      <div>
+        <p className="eyebrow">Continue exploring</p>
+        <h2 id="related-products-title" className="section-title">You may also like.</h2>
+        <p className="related-description">A few considered pieces selected from the Zorah collection.</p>
+      </div>
+      <Link className="related-view-all" href="/shop">View all pieces <span aria-hidden="true">→</span></Link>
+    </div>
+    <div className="related-grid">
+      {related.map((p,index)=><div className="related-item" key={p.slug}>
+        <span className="related-index">0{index+1}</span>
+        <ProductCard {...p}/>
+      </div>)}
+    </div>
+  </section>;
 }
