@@ -5,7 +5,8 @@ import type { Product } from "@/lib/catalog";
 type ProductCardProps={slug?:string;name:string;price:string;priceValue?:number;tone?:"ivory"|"brown"|"green"|"black";imageUrl?:string|null;badge?:string|null;category?:string;availability?:string;colors?:string[];variantDetails?:Product["variantDetails"]};
 export function ProductCard({slug,name,price,priceValue=0,tone="ivory",imageUrl,badge,category,availability,colors=[],variantDetails=[]}:ProductCardProps){
  const{isWishlisted,toggleWishlist,addToBag}=useCommerce();const saved=slug?isWishlisted(slug):false;
- const product:Product={slug:slug||"",name,price,priceValue,category:category||"Handbags",tone,colors,availability:(availability==="In stock"?"In stock":"Made to order"),featuredRank:0,description:`${name}, crafted by Zorah in Lagos.`,details:["Leather exterior","Considered interior","Hand-finished hardware","Crafted in Lagos"],variants:colors.length?colors:["Default"],imageUrl,variantDetails};
+ const normalizedAvailability=availability==='Unavailable'?'Unavailable':availability==='In stock'?'In stock':'Made to order';
+ const product:Product={slug:slug||"",name,price,priceValue,category:category||"Handbags",tone,colors,availability:normalizedAvailability,featuredRank:0,description:`${name}, crafted by Zorah in Lagos.`,details:["Leather exterior","Considered interior","Hand-finished hardware","Crafted in Lagos"],variants:colors.length?colors:["Default"],imageUrl,variantDetails};
  const defaultVariant=variantDetails?.find(v=>v.label&&v.isAvailable)?.label||variantDetails?.[0]?.label||colors[0]||"Default";
  const purchasable=variantDetails?.length?variantDetails.some(v=>v.isAvailable):true;
  return <article className="product-card">
