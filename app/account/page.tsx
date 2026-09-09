@@ -23,9 +23,6 @@ export default async function AccountPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login?next=/account')
 
-  // The session is established by Supabase Auth first. The server-only client is
-  // then used to read this user's profile without making the customer page
-  // dependent on a client-side profile query or an accidental RLS cache miss.
   const admin = createAdminClient()
   const { data: profile } = await admin
     .from('profiles')
@@ -33,8 +30,14 @@ export default async function AccountPage() {
     .eq('id', user.id)
     .maybeSingle()
 
-  // Staff identities remain isolated from the customer portal.
-  if (!profile?.is_active || profile.role !== 'customer') redirect('/shop')
+  // The customer portal is strictly customer-only. Staff are never silently
+  // sent to the storefront from /account; they must use the separate admin portal.
+  if (profile?.role && profile.role !== 'customer') {
+    redirect('/admin-login?error=staff_use_admin')
+  }
+  if (!profile || !profile.is_active) {
+    redirect('/login?error=account_unavailable&next=/account')
+  }
 
   const name = profile.full_name || user.user_metadata?.full_name || user.email?.split('@')[0] || 'Customer'
   const firstName = name.split(' ')[0]
