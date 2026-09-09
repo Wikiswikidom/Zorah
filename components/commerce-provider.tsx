@@ -17,6 +17,24 @@ const isCart=(value:unknown):value is CartItem[]=>Array.isArray(value)&&value.le
 const isRecentlyViewed=(value:unknown):value is string[]=>Array.isArray(value)&&value.length<=MAX_RECENT&&value.every(isSafeSlug);
 const isProductSnapshot=(value:unknown):value is Product=>{if(!value||typeof value!=="object")return false;const p=value as Partial<Product>;return isSafeSlug(p.slug)&&typeof p.name==="string"&&typeof p.price==="string"&&typeof p.priceValue==="number"&&Number.isFinite(p.priceValue)&&typeof p.category==="string"&&typeof p.description==="string"&&Array.isArray(p.details)&&Array.isArray(p.variants)};
 async function productIdForSlug(slug:string){try{const supabase=createClient();const {data}=await supabase.from("products").select("id").eq("slug",slug).maybeSingle();return data?.id??null}catch{return null}}
+async function hydrateCartImages(items:CartItem[]){
+  if(!items.length)return items;
+  try{
+    const supabase=createClient();
+    const slugs=[...new Set(items.map(item=>item.product.slug).filter(isSafeSlug))];
+    const {data,error}=await supabase.from("products").select("slug,images:product_images(storage_path,alt_text,is_primary,sort_order)").in("slug",slugs).eq("status","published");
+    if(error||!data?.length)return items;
+    const imageBySlug=new Map<string,string>();
+    await Promise.all(data.map(async(row:any)=>{
+      const images=(row.images??[]) as Array<{storage_path:string;is_primary:boolean;sort_order:number}>;
+      const primary=[...images].sort((a,b)=>Number(b.is_primary)-Number(a.is_primary)||a.sort_order-b.sort_order)[0];
+      if(!primary?.storage_path)return;
+      const signed=await supabase.storage.from("product-media").createSignedUrl(primary.storage_path,900);
+      if(signed.data?.signedUrl)imageBySlug.set(row.slug,signed.data.signedUrl);
+    }));
+    return items.map(item=>{const imageUrl=imageBySlug.get(item.product.slug);return imageUrl?{...item,product:{...item.product,imageUrl}}:item});
+  }catch(error){console.error("Cart image hydration failed",error);return items}
+}
 
 export function CommerceProvider({children}:{children:React.ReactNode}){
   const[cart,setCart]=useState<CartItem[]>([]),[wishlist,setWishlist]=useState<string[]>([]),[recentlyViewed,setRecentlyViewed]=useState<string[]>([]),[hydrated,setHydrated]=useState(false),[userId,setUserId]=useState<string|null>(null);
@@ -36,10 +54,10 @@ export function CommerceProvider({children}:{children:React.ReactNode}){
       if(guestCart.length){
         const merged=[...remote];
         for(const item of guestCart){const index=merged.findIndex(x=>x.product.slug===item.product.slug&&x.variant===item.variant);if(index<0)merged.push(item);else merged[index]={...merged[index],quantity:Math.min(MAX_QUANTITY,merged[index].quantity+item.quantity)}}
-        const limited=merged.slice(0,MAX_CART_ITEMS);setCart(limited);
+        const limited=await hydrateCartImages(merged.slice(0,MAX_CART_ITEMS));setCart(limited);
         await Promise.all(limited.map(item=>supabase.from("customer_cart").upsert({user_id:id,product_slug:item.product.slug,variant:item.variant,quantity:item.quantity,product_snapshot:item.product},{onConflict:"user_id,product_slug,variant"})));
         try{window.localStorage.removeItem(STORAGE_KEYS.cart)}catch{}
-      }else setCart(remote);
+      }else setCart(await hydrateCartImages(remote));
     }catch(error){console.error("Customer commerce data load failed",error)}
   },[]);
 
