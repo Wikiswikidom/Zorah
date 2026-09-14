@@ -1,20 +1,39 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { adminLogout } from "@/app/admin/actions";
+import { AdminGlobalSearch } from "@/components/admin/admin-global-search";
 
-type StaffRole='super_admin'|'catalog_admin'|'order_admin'|'content_admin'|'marketing_admin'|'ads_admin'|'support_admin'|'analytics_admin'|'operations_admin';type Item=[string,string,string];
+type StaffRole='super_admin'|'catalog_admin'|'order_admin'|'content_admin'|'marketing_admin'|'ads_admin'|'support_admin'|'analytics_admin'|'operations_admin';
+type Item=[string,string,string];
 const groups:{label:string;items:Item[]}[]=[
-  {label:"Overview",items:[["Dashboard","/admin","DB"]]},
-  {label:"Commerce",items:[["Orders","/admin/orders","OR"],["Products","/admin/products","PR"],["Categories","/admin/categories","CT"],["Collections","/admin/collections","CO"],["Inventory","/admin/inventory","IN"],["Customers","/admin/customers","CU"],["Waitlist","/admin/waitlist","WL"]]},
-  {label:"Growth",items:[["Campaigns","/admin/campaigns","CA"],["Ads","/admin/ads","AD"],["Merchandising","/admin/merchandising","ME"]]},
-  {label:"Content",items:[["Landing page","/admin/content","LP"],["Journal","/admin/journal","JO"],["Terms & Conditions","/admin/terms","TC"],["Scheduling","/admin/scheduling","SC"]]},
-  {label:"Support",items:[["Enquiries","/admin/enquiries","EN"]]},
-  {label:"Governance",items:[["Team & permissions","/admin/team","TM"],["Security","/admin/security","SE"],["Audit trail","/admin/audit","AU"]]},
+  {label:"Overview",items:[["Dashboard","/admin","dashboard"]]},
+  {label:"Sell",items:[["Orders","/admin/orders","orders"],["Products","/admin/products","products"],["Inventory","/admin/inventory","inventory"],["Customers","/admin/customers","customers"]]},
+  {label:"Store",items:[["Categories","/admin/categories","categories"],["Collections","/admin/collections","collections"],["Merchandising","/admin/merchandising","merchandising"]]},
+  {label:"Grow",items:[["Campaigns","/admin/campaigns","campaigns"],["Ads","/admin/ads","ads"]]},
+  {label:"Content",items:[["Website","/admin/content","website"],["Journal","/admin/journal","journal"]]},
+  {label:"Support",items:[["Enquiries","/admin/enquiries","enquiries"],["Waitlist","/admin/waitlist","waitlist"]]},
+  {label:"Settings",items:[["Team & permissions","/admin/team","team"],["Security","/admin/security","security"],["Audit trail","/admin/audit","audit"]]},
 ];
 const permissions:Record<StaffRole,string[]>={super_admin:groups.flatMap(g=>g.items.map(i=>i[1])),catalog_admin:["/admin/products","/admin/categories","/admin/collections","/admin/inventory"],order_admin:["/admin/orders"],content_admin:["/admin/content","/admin/journal","/admin/terms"],marketing_admin:["/admin/campaigns","/admin/merchandising"],ads_admin:["/admin/ads"],support_admin:["/admin/customers","/admin/waitlist","/admin/enquiries"],operations_admin:["/admin/scheduling"],analytics_admin:["/admin"]};
 
-export function AdminShell({children,role}:{children:React.ReactNode;role:StaffRole}){const pathname=usePathname();const router=useRouter();const allowed=permissions[role]??[];const canCatalog=allowed.includes('/admin/products');const visibleGroups=groups.map(g=>({...g,items:g.items.filter(([,href])=>allowed.includes(href))})).filter(g=>g.items.length);const roleLabel=role.replaceAll('_',' ');return <div className="zorah-admin-shell" data-role={role}>
-    <aside className="zorah-admin-sidebar"><div className="zorah-admin-brand"><Link href="/admin" className="zorah-admin-wordmark">ZORAH</Link><span>Commerce studio</span></div>{canCatalog&&<div className="zorah-admin-quick"><Link href="/admin/products/new">＋ Add product</Link><Link href="/admin/categories">＋ Category</Link></div>}<nav className="zorah-admin-nav" aria-label="Administration">{visibleGroups.map(group=><div className="zorah-admin-nav-group" key={group.label}><p>{group.label}</p>{group.items.map(([label,href,icon])=>{const active=href==="/admin"?pathname===href:pathname===href||pathname.startsWith(`${href}/`);return <Link key={href} href={href} className={`zorah-admin-nav-link ${active?"is-active":""}`}><span className="zorah-admin-nav-icon" aria-hidden>{icon}</span><span>{label}</span></Link>})}</div>)}</nav><div className="zorah-admin-sidebar-foot"><span className="zorah-admin-role-chip">{roleLabel}</span><Link href="/" className="zorah-admin-quiet-link">View brand site ↗</Link><Link href="/shop" className="zorah-admin-quiet-link">View storefront ↗</Link><form action={adminLogout}><button type="submit" className="zorah-admin-logout">Log out</button></form></div></aside>
-    <div className="zorah-admin-main"><div className="zorah-admin-mobilebar"><Link href="/admin" className="zorah-admin-wordmark">ZORAH</Link><button type="button" className="zorah-admin-back" onClick={()=>router.back()} aria-label="Go back">← Back</button><span className="zorah-admin-mobile-role">{roleLabel}</span><div className="zorah-admin-mobile-actions">{canCatalog&&<Link href="/admin/products/new">＋ Product</Link>}<Link href="/">Home ↗</Link><Link href="/shop">Store ↗</Link><form action={adminLogout}><button type="submit">Log out</button></form></div></div><div className="zorah-admin-desktop-backbar"><button type="button" onClick={()=>router.back()}>← Back</button><Link href="/">Home</Link><Link href="/shop">Storefront</Link></div>{children}</div>
-  </div>}
+function Icon({name}:{name:string}){const paths:Record<string,string>={dashboard:"M3 13h7V3H3v10Zm11 8h7V11h-7v10ZM3 21h7v-5H3v5Zm11-11h7V3h-7v7Z",orders:"M6 4h12v17H6z M9 4V2h6v2 M9 8h6 M9 12h6 M9 16h4",products:"M4 6h16v14H4z M7 6V4h10v2 M8 10h8 M8 14h5",inventory:"M4 7h16v14H4z M7 7V4h10v3 M8 11h8 M8 15h5",customers:"M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2 M9.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm6-5h5m-2.5-2.5V8",categories:"M4 5h6v6H4z M14 5h6v6h-6z M4 15h6v6H4z M14 15h6v6h-6z",collections:"M4 5h16v16H4z M8 2v6 M16 2v6 M4 10h16",merchandising:"M4 5h16v16H4z M8 9h8 M8 13h5 M8 17h8",campaigns:"M4 5h16v12H4z M8 21h8 M12 17v4",ads:"M4 6h16v12H4z M8 10h8 M8 14h5",website:"M4 4h16v16H4z M4 9h16 M9 4v16",journal:"M5 4h14v17H5z M8 8h8 M8 12h8 M8 16h5",enquiries:"M4 5h16v12H4l-3 3 1-3H4z M8 9h8 M8 13h5",waitlist:"M6 3h12v18H6z M9 7h6 M9 11h6 M9 15h4",team:"M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M17 11a3 3 0 1 0 0-6",security:"M12 3 4 7v5c0 5 3.5 8 8 9 4.5-1 8-4 8-9V7l-8-4Zm-3 9 2 2 4-4",audit:"M5 4h14v17H5z M8 8h8 M8 12h8 M8 16h5"};return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d={paths[name]??paths.dashboard}/></svg>}
+
+export function AdminShell({children,role}:{children:React.ReactNode;role:StaffRole}){
+ const pathname=usePathname(); const allowed=permissions[role]??[]; const canCatalog=allowed.includes('/admin/products');
+ const visibleGroups=groups.map(g=>({...g,items:g.items.filter(([,href])=>allowed.includes(href))})).filter(g=>g.items.length);
+ const roleLabel=role.replaceAll('_',' ');
+ return <div className="zorah-admin-shell" data-role={role}>
+  <aside className="zorah-admin-sidebar">
+   <div className="zorah-admin-brand"><Link href="/admin" className="zorah-admin-wordmark">ZORAH</Link><span>Commerce studio</span></div>
+   {canCatalog&&<div className="zorah-admin-quick"><Link href="/admin/products/new">＋ Add product</Link><Link href="/admin/categories">＋ Category</Link></div>}
+   <nav className="zorah-admin-nav" aria-label="Administration">{visibleGroups.map(group=><div className="zorah-admin-nav-group" key={group.label}><p>{group.label}</p>{group.items.map(([label,href,icon])=>{const active=href==="/admin"?pathname===href:pathname===href||pathname.startsWith(`${href}/`);return <Link key={href} href={href} className={`zorah-admin-nav-link ${active?"is-active":""}`}><span className="zorah-admin-nav-icon"><Icon name={icon}/></span><span>{label}</span></Link>})}</div>)}</nav>
+   <div className="zorah-admin-sidebar-foot"><span className="zorah-admin-role-chip">{roleLabel}</span><Link href="/" className="zorah-admin-quiet-link">View brand site ↗</Link><Link href="/shop" className="zorah-admin-quiet-link">View storefront ↗</Link><form action={adminLogout}><button type="submit" className="zorah-admin-logout">Log out</button></form></div>
+  </aside>
+  <div className="zorah-admin-main">
+   <div className="zorah-admin-topbar"><div className="zorah-admin-mobile-brand"><Link href="/admin" className="zorah-admin-wordmark">ZORAH</Link></div><AdminGlobalSearch/><div className="zorah-admin-top-actions"><Link href="/" aria-label="View brand site">Website ↗</Link><Link href="/shop" aria-label="View storefront">Store ↗</Link><span className="zorah-admin-role-chip">{roleLabel}</span><form action={adminLogout}><button type="submit">Log out</button></form></div></div>
+   <div className="zorah-admin-mobilebar"><Link href="/admin" className="zorah-admin-wordmark">ZORAH</Link><span className="zorah-admin-mobile-role">{roleLabel}</span>{canCatalog&&<Link href="/admin/products/new">＋ Product</Link>}</div>
+   {children}
+  </div>
+ </div>
+}
