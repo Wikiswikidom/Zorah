@@ -1,17 +1,44 @@
 "use client"
-import {useEffect,useMemo,useState} from 'react'
-import type {Product} from '@/lib/catalog'
-import {useCommerce} from '@/components/commerce-provider'
-import {LoadingSpinner} from '@/components/loading-spinner'
+import { useMemo, useState } from "react"
+import type { Product } from "@/lib/catalog"
+import { useCommerce } from "@/components/commerce-provider"
+import { LoadingSpinner } from "@/components/loading-spinner"
 
-export function ProductPurchase({product}:{product:Product}){
- const{addToBag,trackViewed}=useCommerce();
- const availableVariant=useMemo(()=>product.variantDetails?.find(v=>v.isAvailable)?.label||product.variants[0]||'Default',[product.variantDetails,product.variants]);
- const[variant,setVariant]=useState(availableVariant);const[quantity,setQuantity]=useState(1);const[added,setAdded]=useState(false);const[waitlisted,setWaitlisted]=useState(false);const[message,setMessage]=useState('');const[busy,setBusy]=useState(false);
- useEffect(()=>trackViewed(product.slug),[product.slug,trackViewed]);
- useEffect(()=>{if(product.variantDetails?.length&&!product.variantDetails.some(v=>v.label===variant)){setVariant(availableVariant);setQuantity(1)}},[product.variantDetails,variant,availableVariant]);
- const selected=product.variantDetails?.find(v=>v.label===variant);const maxQuantity=selected&&selected.stockQuantity>0?Math.min(99,selected.stockQuantity):99;const canPurchase=selected?selected.isAvailable:true;
- const add=()=>{if(!canPurchase||busy)return;setBusy(true);setMessage('');addToBag(product,Math.min(quantity,maxQuantity),variant);setAdded(true);window.setTimeout(()=>setAdded(false),1800);window.setTimeout(()=>setBusy(false),300)};
- const waitlist=async()=>{if(busy)return;setBusy(true);setMessage('');try{const r=await fetch('/api/waitlist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({slug:product.slug})});const d=await r.json().catch(()=>({}));if(r.ok){setWaitlisted(true);setMessage('Saved to your waitlist.')}else setMessage(d.error||'Could not save this piece.')}catch{setMessage('Could not save this piece right now.')}finally{setBusy(false)}};
- return <div className="buy-panel"><div className="variant-picker"><span className="picker-label">Colour</span><div className="variant-options">{product.variants.map(option=>{const detail=product.variantDetails?.find(v=>v.label===option);const unavailable=detail?!detail.isAvailable:false;return <button type="button" key={option} disabled={unavailable||busy} className={variant===option?'variant-option is-selected':'variant-option'} onClick={()=>{setVariant(option);setQuantity(1);setMessage('')}} aria-pressed={variant===option} aria-disabled={unavailable}>{option}{unavailable?' · Unavailable':''}</button>})}</div></div>{selected&&<p className="purchase-availability" role="status">{selected.isMadeToOrder?'Made to order — we will confirm production timing with you.':selected.stockQuantity>0?`${selected.stockQuantity} available`: 'Unavailable'}</p>}<div className="purchase-row"><div className="quantity-control" aria-label="Quantity"><button type="button" disabled={busy||quantity<=1} onClick={()=>setQuantity(q=>Math.max(1,q-1))} aria-label="Decrease quantity">−</button><span>{quantity}</span><button type="button" disabled={busy||quantity>=maxQuantity} onClick={()=>setQuantity(q=>Math.min(maxQuantity,q+1))} aria-label="Increase quantity">+</button></div><button type="button" className="button button-dark add-button" disabled={!canPurchase||busy} onClick={add}>{busy?<span style={{display:'inline-flex',alignItems:'center',gap:8}}><LoadingSpinner label="Adding to bag" size={15}/>Adding…</span>:added?'Added to bag ✓':canPurchase?'Add to bag':'Unavailable'}</button></div><div className="product-secondary-actions"><button type="button" className="secondary-action" disabled={busy} onClick={waitlist}>{waitlisted?'✓ On your waitlist':'♡ Add to waitlist'}</button><a className="secondary-action" href="/cart">View bag →</a><a className="secondary-action" href="/custom-orders">Custom order →</a></div>{message&&<p className="purchase-message" role="status">{message}</p>}</div>
+export function ProductPurchase({ product }: { product: Product }) {
+  const { addToBag, addToWaitlist, isWaitlisted } = useCommerce()
+  const availableVariant = useMemo(() => product.variantDetails?.find(v => v.isAvailable)?.label || product.variants[0] || "Default", [product.variantDetails, product.variants])
+  const [variant, setVariant] = useState(availableVariant)
+  const [quantity, setQuantity] = useState(1)
+  const [added, setAdded] = useState(false)
+  const [message, setMessage] = useState("")
+  const [busy, setBusy] = useState(false)
+  const selected = product.variantDetails?.find(v => v.label === variant)
+  const maxQuantity = selected && selected.stockQuantity > 0 ? Math.min(99, selected.stockQuantity) : 99
+  const canPurchase = selected ? selected.isAvailable : true
+  const waitlisted = isWaitlisted(product.slug)
+
+  const add = () => {
+    if (!canPurchase || busy) return
+    setBusy(true); setMessage("")
+    addToBag(product, Math.min(quantity, maxQuantity), variant)
+    setAdded(true)
+    window.setTimeout(() => setAdded(false), 1800)
+    window.setTimeout(() => setBusy(false), 300)
+  }
+
+  const waitlist = async () => {
+    if (busy || waitlisted) return
+    setBusy(true); setMessage("")
+    const ok = await addToWaitlist(product.slug)
+    setMessage(ok ? "Saved to your waitlist." : "Could not save this piece right now.")
+    setBusy(false)
+  }
+
+  return <div className="buy-panel">
+    <div className="variant-picker"><span className="picker-label">Colour</span><div className="variant-options">{product.variants.map(option => { const detail = product.variantDetails?.find(v => v.label === option); const unavailable = detail ? !detail.isAvailable : false; return <button type="button" key={option} disabled={unavailable || busy} className={variant === option ? "variant-option is-selected" : "variant-option"} onClick={() => { setVariant(option); setQuantity(1); setMessage("") }} aria-pressed={variant === option} aria-disabled={unavailable}>{option}{unavailable ? " · Unavailable" : ""}</button> })}</div></div>
+    {selected && <p className="purchase-availability" role="status">{selected.isMadeToOrder ? "Made to order — we will confirm production timing with you." : selected.stockQuantity > 0 ? `${selected.stockQuantity} available` : "Unavailable"}</p>}
+    <div className="purchase-row"><div className="quantity-control" aria-label="Quantity"><button type="button" disabled={busy || quantity <= 1} onClick={() => setQuantity(q => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button><span>{quantity}</span><button type="button" disabled={busy || quantity >= maxQuantity} onClick={() => setQuantity(q => Math.min(maxQuantity, q + 1))} aria-label="Increase quantity">+</button></div><button type="button" className="button button-dark add-button" disabled={!canPurchase || busy} onClick={add}>{busy ? <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><LoadingSpinner label="Adding to bag" size={15} />Adding…</span> : added ? "Added to bag ✓" : canPurchase ? "Add to bag" : "Unavailable"}</button></div>
+    <div className="product-secondary-actions"><button type="button" className="secondary-action" disabled={busy} onClick={waitlist}>{waitlisted ? "✓ On your waitlist" : "♡ Add to waitlist"}</button><a className="secondary-action" href="/cart">View bag →</a><a className="secondary-action" href="/custom-orders">Custom order →</a></div>
+    {message && <p className="purchase-message" role="status">{message}</p>}
+  </div>
 }
