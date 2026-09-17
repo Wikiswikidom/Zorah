@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth/authorization'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,16 +54,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       if (!allowedStatuses.includes(requestedStatus as OrderStatus)) return NextResponse.json({ error: 'Unsupported order status.' }, { status: 400 })
       const next = requestedStatus as OrderStatus
       const current = before.status as OrderStatus
-      const transitions: Record<OrderStatus, OrderStatus[]> = {
-        pending: ['paid','processing','cancelled'],
-        paid: ['processing','cancelled','refunded'],
-        processing: ['shipped','cancelled'],
-        shipped: ['delivered'],
-        delivered: [],
-        cancelled: [],
-        refunded: []
-      }
+      const transitions: Record<OrderStatus, OrderStatus[]> = { pending:['paid','processing','cancelled'], paid:['processing','cancelled','refunded'], processing:['shipped','cancelled'], shipped:['delivered'], delivered:[], cancelled:[], refunded:[] }
       if (next !== current && !transitions[current]?.includes(next)) return NextResponse.json({ error: `Cannot move an order from ${current} to ${next}.` }, { status: 409 })
+      if (next === 'paid' && before.payment_status !== 'paid') return NextResponse.json({ error: 'An order can only be marked paid after its payment is confirmed.' }, { status: 409 })
       if (['processing','shipped','delivered'].includes(next) && before.payment_status !== 'paid') return NextResponse.json({ error: 'Only paid orders can be fulfilled.' }, { status: 409 })
       if (next === 'refunded') return NextResponse.json({ error: 'Use the payment refund action to mark an order refunded.' }, { status: 409 })
       patch.status = next
