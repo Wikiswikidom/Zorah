@@ -31,7 +31,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    await requireRole(['order_admin'])
+    const { user } = await requireRole(['order_admin'])
     const { id } = await params
     const body = await request.json().catch(() => null)
     if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Invalid order update.' }, { status: 400 })
@@ -41,8 +41,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (readError) throw readError
     if (!before) return NextResponse.json({ error: 'Order not found.' }, { status: 404 })
 
-    const patch: Record<string, unknown> = {}
     const requestedStatus = typeof input.status === 'string' ? input.status : null
+    if (requestedStatus === 'cancelled' && before.status !== 'cancelled') {
+      const note = typeof input.note === 'string' ? input.note.trim().slice(0, 1000) || null : null
+      const { data: cancelled, error: cancelError } = await admin.rpc('cancel_order_and_restock', { p_order_id: id, p_actor_id: user.id, p_note: note })
+      if (cancelError) throw cancelError
+      await admin.from('admin_audit_logs').insert({ actor_id: user.id, actor_role: 'order_admin', action: 'UPDATE', resource_type: 'order', resource_id: id, result: 'success', before_data: before, after_data: cancelled, metadata: { changed_fields: ['status','cancelled_at'], restocked: before.payment_status === 'paid' } })
+      return NextResponse.json({ order: cancelled })
+    }
+
+    const patch: Record<string, unknown> = {}
     if (requestedStatus) {
       if (!allowedStatuses.includes(requestedStatus as OrderStatus)) return NextResponse.json({ error: 'Unsupported order status.' }, { status: 400 })
       const next = requestedStatus as OrderStatus
@@ -62,7 +70,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       patch.status = next
       if (next === 'shipped') patch.shipped_at = new Date().toISOString()
       if (next === 'delivered') patch.delivered_at = new Date().toISOString()
-      if (next === 'cancelled') patch.cancelled_at = new Date().toISOString()
     }
 
     for (const key of ['tracking_number','carrier','admin_note'] as const) {
@@ -76,14 +83,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     patch.updated_at = new Date().toISOString()
     const { data: updated, error: updateError } = await admin.from('orders').update(patch).eq('id', id).select('id,order_number,status,payment_status,tracking_number,carrier,shipped_at,delivered_at,cancelled_at,admin_note,updated_at').single()
     if (updateError) throw updateError
-
-    const auth = await createClient()
-    const { data: { user } } = await auth.auth.getUser()
-    const { data: actor } = user ? await admin.from('profiles').select('role').eq('id', user.id).maybeSingle() : { data: null }
-    if (requestedStatus && requestedStatus !== before.status) {
-      await admin.from('order_status_history').insert({ order_id: id, status: requestedStatus, note: typeof input.note === 'string' ? input.note.trim().slice(0, 1000) || null : null, created_by: user?.id ?? null })
-    }
-    await admin.from('admin_audit_logs').insert({ actor_id: user?.id ?? null, actor_role: actor?.role ?? null, action: 'UPDATE', resource_type: 'order', resource_id: id, result: 'success', before_data: before, after_data: updated, metadata: { changed_fields: Object.keys(patch).filter(key => key !== 'updated_at') } })
+    if (requestedStatus && requestedStatus !== before.status) await admin.from('order_status_history').insert({ order_id: id, status: requestedStatus, note: typeof input.note === 'string' ? input.note.trim().slice(0, 1000) || null : null, created_by: user.id })
+    await admin.from('admin_audit_logs').insert({ actor_id: user.id, actor_role: 'order_admin', action: 'UPDATE', resource_type: 'order', resource_id: id, result: 'success', before_data: before, after_data: updated, metadata: { changed_fields: Object.keys(patch).filter(key => key !== 'updated_at') } })
     return NextResponse.json({ order: updated })
   } catch (error) {
     console.error('Admin order detail PATCH failed', error)
