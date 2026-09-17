@@ -9,6 +9,7 @@ import './content-ui.css'
 import './branding.css'
 import './admin-form-polish.css'
 import './workspace-polish.css'
+import './admin-responsive.css'
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { role } = await requireStaff()
