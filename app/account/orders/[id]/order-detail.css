@@ -1,0 +1,23 @@
+.order-detail-toolbar{display:flex;justify-content:space-between;gap:16px;margin-bottom:18px;font-size:12px;color:rgba(17,17,17,.58)}
+.order-detail-toolbar a{font-weight:700;color:var(--green)}
+.order-detail-grid{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(260px,.75fr);gap:18px;align-items:start}
+.order-detail-main,.order-detail-side{display:grid;gap:18px}
+.order-detail-card{background:#fff;border:1px solid var(--line);padding:22px}
+.order-card-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:20px}
+.order-overline{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:rgba(17,17,17,.5);margin-bottom:6px}
+.order-detail-card h2{margin:0;font-family:var(--font-display),Georgia,serif;font-size:28px;font-weight:400;line-height:1.05}
+.order-pill{padding:7px 10px;border:1px solid var(--line);font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.order-pill.status-delivered{background:#e8f1eb}.order-pill.status-shipped{background:#edf0f4}.order-pill.status-processing{background:#f5efe2}.order-pill.status-cancelled,.order-pill.status-refunded{background:#f2e7e5}
+.order-progress{position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 0 4px}
+.order-progress-line{position:absolute;left:12%;right:12%;top:25px;height:1px;background:rgba(17,17,17,.14)}
+.order-step{position:relative;z-index:1;text-align:center;color:rgba(17,17,17,.4);font-size:10px;text-transform:uppercase;letter-spacing:.07em}
+.order-step span{display:grid;place-items:center;width:30px;height:30px;margin:0 auto 9px;border:1px solid rgba(17,17,17,.18);border-radius:50%;background:#fff}
+.order-step strong{font-weight:600}.order-step.is-active{color:var(--ink)}.order-step.is-active span{background:var(--green);border-color:var(--green);color:#fff}
+.order-special-state{padding:16px;background:var(--ivory);display:grid;gap:4px}.order-special-state span{font-size:12px;color:rgba(17,17,17,.58)}
+.tracking-box{margin-top:20px;padding:14px 16px;background:var(--green);color:var(--ivory);display:grid;gap:4px}.tracking-box span{font-size:9px;letter-spacing:.15em;text-transform:uppercase;opacity:.65}.tracking-box strong{font-size:13px}
+.order-items{border-top:1px solid var(--line)}.order-item{display:grid;grid-template-columns:46px 1fr auto;gap:14px;align-items:center;padding:15px 0;border-bottom:1px solid var(--line)}
+.order-item-mark{width:46px;height:52px;display:grid;place-items:center;background:#e7dfd3;color:var(--leather);font-family:var(--font-display),Georgia,serif;font-size:20px}.order-item-info{display:grid;gap:5px}.order-item-info strong{font-size:13px}.order-item-info span,.order-item>strong{font-size:11px;color:rgba(17,17,17,.58)}
+.order-timeline{border-left:1px solid rgba(17,17,17,.14);margin-left:5px;padding-left:22px;display:grid;gap:20px}.order-event{position:relative}.order-event-dot{position:absolute;left:-28px;top:3px;width:10px;height:10px;border:2px solid var(--green);background:var(--ivory);border-radius:50%}.order-event div{display:grid;gap:4px}.order-event strong{font-size:12px}.order-event span{font-size:11px;color:rgba(17,17,17,.6)}.order-event small{font-size:10px;color:rgba(17,17,17,.42)}
+.order-total-row{display:flex;justify-content:space-between;gap:18px;padding:10px 0;border-bottom:1px solid var(--line);font-size:12px}.order-total-row:first-of-type{margin-top:18px}.order-total-row:last-child{border-bottom:0}.order-total-row strong{font-size:18px}.order-detail-side p{font-size:12px;line-height:1.75;color:rgba(17,17,17,.62);margin:16px 0 0}.order-help-link{display:block;padding:16px 0;color:var(--green);font-size:11px;letter-spacing:.06em}
+@media(max-width:900px){.order-detail-grid{grid-template-columns:1fr}.order-detail-side{grid-template-columns:1fr 1fr}.order-help-link{grid-column:1/-1}}
+@media(max-width:640px){.order-detail-toolbar{align-items:flex-start}.order-detail-side{grid-template-columns:1fr}.order-card-heading{flex-direction:column}.order-detail-card{padding:17px}.order-progress{gap:2px}.order-step{font-size:8px}.order-step span{width:27px;height:27px}.order-progress-line{top:23px;left:10%;right:10%}.order-item{grid-template-columns:40px 1fr}.order-item-mark{width:40px;height:46px}.order-item>strong{grid-column:2}.order-detail-toolbar span{white-space:nowrap}}
