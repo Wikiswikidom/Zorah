@@ -41,6 +41,25 @@ jobs:
       - name: Production build
         run: npm run build
 
+      - name: Security source scan
+        run: |
+          set -euo pipefail
+          echo "Checking repository for accidental secrets and unsafe client exposure…"
+          if git grep -nE 'SUPABASE_(SERVICE_ROLE_KEY|SECRET_KEY)=|sk_(live|test)_[A-Za-z0-9_-]+' -- ':!*.md' ':!.env.example' ':!docs/**'; then
+            echo "Potential server secret/payment secret found in tracked source."
+            exit 1
+          fi
+          if git grep -nE 'dangerouslySetInnerHTML|new Function\\(|eval\\(' -- 'app/**' 'components/**' 'lib/**'; then
+            echo "Potentially unsafe dynamic code/HTML sink found. Review before release."
+            exit 1
+          fi
+          while IFS= read -r file; do
+            if grep -qE "^[[:space:]]*['\"]use client['\"]" "$file" && grep -q "createAdminClient" "$file"; then
+              echo "Service-role client imported into a client component: $file"
+              exit 1
+            fi
+          done < <(find app components lib -type f \\( -name '*.ts' -o -name '*.tsx' \\))
+
       - name: Dependency audit
         run: |
           set -e
