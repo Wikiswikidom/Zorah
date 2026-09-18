@@ -32,7 +32,7 @@ export async function POST(request: Request) {
 
     const form = await request.formData()
     const name = clean(form.get('name'), 160)
-    const email = clean(form.get('email'), 320).toLowerCase()
+    const email = (user.email || '').trim().toLowerCase()
     const phone = clean(form.get('phone'), 40)
     const bagStyle = clean(form.get('bag_style'), 120)
     const color = clean(form.get('color'), 120)
