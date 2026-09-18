@@ -25,7 +25,8 @@ export async function POST(request:Request){
     const original=Number(payment.amount),already=Number(payment.refunded_amount||0),amount=requested??(original-already)
     if(!Number.isFinite(original)||amount<=0||already+amount>original)return NextResponse.json({error:`Refund amount cannot exceed the remaining ₦${Math.max(0,original-already).toLocaleString('en-NG')}.`},{status:400})
     if(payment.refund_status==='pending'||payment.refund_status==='processing'||payment.refund_status==='needs-attention')return NextResponse.json({error:'A refund is already in progress for this payment.'},{status:409})
-    const {data:claimed,error:claimError}=await admin.from('payments').update({refund_status:'processing'}).eq('id',payment.id).eq('status','paid').neq('refund_status','pending').neq('refund_status','processing').neq('refund_status','needs-attention').select('id').maybeSingle()
+    const claimQuery=admin.from('payments').update({refund_status:'processing'}).eq('id',payment.id).eq('status','paid')
+    const {data:claimed,error:claimError}=payment.refund_status ? await claimQuery.eq('refund_status',payment.refund_status).select('id').maybeSingle() : await claimQuery.is('refund_status',null).select('id').maybeSingle()
     if(claimError)throw claimError
     if(!claimed)return NextResponse.json({error:'A refund is already in progress for this payment.'},{status:409})
     let refund:Record<string,unknown>
