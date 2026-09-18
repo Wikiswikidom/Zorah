@@ -58,7 +58,7 @@ jobs:
               echo "Service-role client imported into a client component: $file"
               exit 1
             fi
-          done < <(find app components lib -type f \\( -name '*.ts' -o -name '*.tsx' \\))
+          done < <(find app components lib -type f \( -name '*.ts' -o -name '*.tsx' \))
 
       - name: Dependency audit
         run: |
