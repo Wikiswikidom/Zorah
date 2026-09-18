@@ -25,10 +25,19 @@ export async function POST(request:Request){
     const original=Number(payment.amount),already=Number(payment.refunded_amount||0),amount=requested??(original-already)
     if(!Number.isFinite(original)||amount<=0||already+amount>original)return NextResponse.json({error:`Refund amount cannot exceed the remaining ₦${Math.max(0,original-already).toLocaleString('en-NG')}.`},{status:400})
     if(payment.refund_status==='pending'||payment.refund_status==='processing'||payment.refund_status==='needs-attention')return NextResponse.json({error:'A refund is already in progress for this payment.'},{status:409})
-    const refund=await createPaystackRefund({transaction:payment.transaction_id??payment.reference,amountNaira:amount,currency:order.currency,customerNote:note,merchantNote:merchantNote||`Zorah refund for ${order.order_number}`})
+    const {data:claimed,error:claimError}=await admin.from('payments').update({refund_status:'processing'}).eq('id',payment.id).eq('status','paid').neq('refund_status','pending').neq('refund_status','processing').neq('refund_status','needs-attention').select('id').maybeSingle()
+    if(claimError)throw claimError
+    if(!claimed)return NextResponse.json({error:'A refund is already in progress for this payment.'},{status:409})
+    let refund:Record<string,unknown>
+    try {
+      refund=await createPaystackRefund({transaction:payment.transaction_id??payment.reference,amountNaira:amount,currency:order.currency,customerNote:note,merchantNote:merchantNote||`Zorah refund for ${order.order_number}`})
+    } catch(error) {
+      await admin.from('payments').update({refund_status:'failed'}).eq('id',payment.id).eq('refund_status','processing')
+      throw error
+    }
     const refundStatus=text(refund?.status,40)||'pending',refundReference=text(refund?.reference||refund?.id,100)||null
-    await admin.from('payments').update({refund_status:refundStatus,refund_reference:refundReference,refunded_amount:already+amount,refunded_at:refundStatus==='processed'?new Date().toISOString():null}).eq('id',payment.id)
+    await admin.from('payments').update({refund_status:refundStatus,refund_reference:refundReference,refunded_amount:already+amount,refunded_at:refundStatus==='processed'?new Date().toISOString():null}).eq('id',payment.id).eq('refund_status','processing')
     await admin.from('admin_audit_logs').insert({actor_id:user.id,actor_role:'order_admin',action:'UPDATE',resource_type:'payment_refund',resource_id:payment.id,result:'success',metadata:{order_id:order.id,order_number:order.order_number,amount,currency:order.currency,refund_status:refundStatus}})
     return NextResponse.json({success:true,status:refundStatus,amount,refundReference})
-  }catch(error){console.error('Refund request failed',error);return NextResponse.json({error:error instanceof Error?error.message:'Refund could not be initiated.'},{status:500})}
+  }catch(error){console.error('Refund request failed',error);return NextResponse.json({error:'Refund could not be initiated right now. Please try again or reconcile the payment.'},{status:500})}
 }
