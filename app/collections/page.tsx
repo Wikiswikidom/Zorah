@@ -1,9 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { collections } from "@/lib/catalog";
 import { createClient } from "@/lib/supabase/server";
 import { StorefrontHeader } from "@/components/storefront-header";
 import { CategoryBrowser } from "@/components/category-browser";
 import styles from "./page.module.css";
+
+export const metadata:Metadata={title:"Handbag collections | Zorah Handbags",description:"Explore Zorah handbag collections and categories, including leather bags crafted in Lagos, Nigeria.",alternates:{canonical:"/collections"},openGraph:{title:"Handbag collections | Zorah Handbags",description:"Explore Zorah handbag collections and categories, including leather bags crafted in Lagos, Nigeria."}};
 
 const fallbackCategories = [
   ...collections,
