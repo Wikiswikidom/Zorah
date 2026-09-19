@@ -28,6 +28,7 @@ export const metadata:Metadata={
  description:defaultDescription,keywords:defaultKeywords,applicationName:siteName,authors:[{name:siteName}],creator:siteName,publisher:siteName,
  alternates:{canonical:"/landing"},
  robots:{index:true,follow:true,maxSnippet:-1,maxImagePreview:"large",maxVideoPreview:-1},
+ verification:process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION?{google:process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION}:undefined,
  openGraph:{type:"website",locale:"en_NG",siteName,title:defaultTitle,description:defaultDescription,url:"/landing",images:[{url:"/opengraph-image",width:1200,height:630,alt:defaultTitle}]},
  twitter:{card:"summary_large_image",title:defaultTitle,description:defaultDescription,images:["/opengraph-image"]},
  icons:{icon:"/icon"},
