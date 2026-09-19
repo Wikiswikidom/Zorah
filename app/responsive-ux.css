@@ -1,0 +1,136 @@
+/* Stage 8 — responsive UX system.
+   Keeps Zorah's premium storefront language while making commerce/admin surfaces
+   resilient from small phones through wide desktop screens. */
+html{overflow-x:hidden}
+body{overflow-x:hidden}
+img,svg,video{max-width:100%}
+button,a,input,select,textarea{touch-action:manipulation}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+/* Storefront header: preserve the compact marketplace header and keep the fixed
+   mobile navigation clear of page content. */
+.store-header{isolation:isolate}
+.store-actions a,.store-nav a{min-height:40px;display:inline-flex;align-items:center}
+.store-bottom-nav{padding-bottom:env(safe-area-inset-bottom);height:calc(64px + env(safe-area-inset-bottom))}
+.store-bottom-nav a{min-width:0;min-height:56px;padding:4px 2px}
+.store-bottom-nav a span{display:grid;place-items:center}
+.store-bottom-nav b{font-variant-numeric:tabular-nums}
+
+/* Marketplace surfaces */
+.jumia-market-page,.jumia-account-page{overflow-x:hidden}
+.jumia-market-wrap,.jumia-account-wrap{max-width:1280px}
+.jumia-page-title-row{min-width:0}
+.jumia-page-title-row h1,.jumia-page-title-row>span{overflow-wrap:anywhere}
+.jumia-product-grid,.zorah-product-grid{min-width:0}
+.product-card,.jumia-product-card{min-width:0}
+.product-name,.jumia-product-body h2{overflow-wrap:anywhere}
+
+/* Tables and dense admin workspaces must scroll rather than break the layout. */
+.zorah-admin-main{min-width:0;overflow-x:hidden}
+.zorah-admin-main main{min-width:0}
+.zorah-admin-main table{min-width:640px}
+.zorah-admin-main [role="table"]{overflow-x:auto;max-width:100%}
+
+/* Admin/editor controls should remain usable on touch screens. */
+.zorah-admin-main input,.zorah-admin-main select,.zorah-admin-main textarea{max-width:100%}
+.zorah-admin-main button,.zorah-admin-main a{min-height:36px}
+.zorah-admin-main .zorah-admin-nav-link{min-height:40px}
+
+/* Avoid fixed/sticky elements colliding with the mobile bottom navigation. */
+@media(max-width:760px){
+  .jumia-market-page,.jumia-account-page{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
+  .jumia-market-wrap,.jumia-account-wrap{padding-left:10px;padding-right:10px}
+  .jumia-breadcrumb{overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .jumia-page-title-row{align-items:flex-start;padding:14px;gap:10px}
+  .jumia-page-title-row>span{max-width:45%;text-align:right;line-height:1.35}
+  .jumia-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .jumia-product-image{aspect-ratio:1/1.08}
+  .jumia-card-btn{min-height:40px}
+  .jumia-empty-card{min-height:260px;padding:36px 16px}
+
+  .store-bottom-nav{display:grid}
+  .zorah-store-search{top:58px}
+  .zorah-product-grid .product-add{min-height:38px}
+  .wishlist-button{width:40px;height:40px}
+  .product-page{padding-bottom:90px!important}
+  .product-page .purchase-row{position:sticky;bottom:calc(68px + env(safe-area-inset-bottom));margin-left:-12px;margin-right:-12px;padding:8px 12px;background:rgba(247,243,236,.96);backdrop-filter:blur(10px);border-top:1px solid rgba(17,17,17,.1)}
+  .cart-summary,.checkout-summary{margin-bottom:8px}
+  .checkout-page{padding-bottom:95px!important}
+
+  .zorah-admin-main .zorah-product-editor{padding-bottom:86px}
+  .zorah-admin-main .zorah-product-editor form>div:last-child{bottom:0;padding-bottom:calc(12px + env(safe-area-inset-bottom))}
+}
+
+@media(max-width:560px){
+  .store-header-inner-top{min-height:52px}
+  .store-logo img{max-width:88px;height:28px}
+  .store-actions{gap:7px}
+  .store-actions a{min-width:38px;justify-content:center}
+  .store-actions .store-cart{font-size:18px}
+  .store-actions .store-account{font-size:18px}
+
+  .shop-page .page-intro{padding:13px 10px!important}
+  .shop-page .page-title{font-size:23px!important}
+  .shop-page .page-lede{font-size:11px!important}
+  .zorah-store-search{margin-bottom:8px}
+  .zorah-store-search input{font-size:16px} /* prevents iOS zoom */
+  .zorah-category-strip a,.zorah-category-strip button{padding:11px 13px}
+  .zorah-results-toolbar{gap:8px}
+  .zorah-results-actions{min-width:0}
+  .zorah-results-actions select{max-width:128px}
+  .zorah-product-grid .product-name{min-height:0!important;line-height:1.35}
+  .zorah-product-grid .product-info{padding:9px!important}
+  .zorah-product-grid .product-add{margin-top:8px!important}
+
+  .jumia-account-mobile-shortcuts{grid-template-columns:repeat(2,1fr)}
+  .jumia-account-mobile-shortcuts a{min-height:58px;border-bottom:1px solid #eee}
+  .jumia-account-mobile-shortcuts a:nth-child(2n){border-right:0}
+  .jumia-account-mobile-shortcuts a:nth-child(n+3){border-bottom:0}
+  .jumia-welcome-card{padding:18px;min-height:126px}
+  .jumia-welcome-card h1{font-size:29px}
+  .jumia-account-cards{grid-template-columns:1fr 1fr}
+  .jumia-account-card{min-height:112px}
+  .jumia-info-card>div{align-items:flex-start;padding:11px 0;min-height:0}
+  .jumia-help-strip a{min-height:40px;display:inline-flex;align-items:center}
+
+  .jumia-subpage-content{padding:13px}
+  .jumia-subpage-head{align-items:flex-start}
+  .jumia-subpage-icon{width:40px;height:40px}
+  .jumia-subpage-actions{display:grid;grid-template-columns:1fr;gap:8px}
+  .jumia-subpage-actions>*{width:100%}
+  .jumia-primary-btn{min-height:44px}
+
+  .cart-item{align-items:flex-start}
+  .cart-actions{flex-wrap:wrap;gap:9px}
+  .cart-summary{padding:16px}
+  .checkout-card,.checkout-summary{padding:15px}
+  .checkout-fields input{font-size:16px} /* prevents iOS zoom */
+  .checkout-terms{font-size:10px}
+
+  .zorah-admin-main .zorah-dashboard-title{font-size:30px!important}
+  .zorah-admin-main .zorah-dashboard-stats{grid-template-columns:1fr 1fr!important}
+  .zorah-admin-main .zorah-dashboard-stat strong{font-size:27px!important}
+  .zorah-admin-main .zorah-dashboard-panel{padding:15px}
+  .zorah-admin-main .zorah-product-editor .editor-title{font-size:30px}
+  .zorah-admin-main .zorah-product-editor form>div:last-child{gap:7px}
+  .zorah-admin-main .zorah-product-editor form>div:last-child button{flex:1}
+}
+
+@media(max-width:380px){
+  .store-logo img{max-width:78px}
+  .store-actions{gap:3px}
+  .store-actions a{min-width:34px}
+  .zorah-product-grid,.jumia-product-grid{gap:6px}
+  .zorah-product-grid .product-price{font-size:13px}
+  .zorah-product-grid .wishlist-button{width:36px;height:36px;right:6px;top:6px}
+  .jumia-account-card{padding:10px}
+  .jumia-account-card h3{font-size:10px}
+  .jumia-account-card p{font-size:8px}
+  .jumia-page-title-row>span{display:none}
+  .checkout-card-head h2,.checkout-summary h2{font-size:25px}
+}
+
+@media(min-width:1200px){
+  .zorah-product-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .jumia-account-wrap,.jumia-market-wrap{padding-left:18px;padding-right:18px}
+}
