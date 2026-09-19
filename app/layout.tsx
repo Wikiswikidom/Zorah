@@ -14,6 +14,7 @@ import "./storefront-final.css";
 import "./storefront-header.css";
 import "./account.css";
 import "./auth-landing.css";
+import "./responsive-ux.css";
 import { Cormorant_Garamond, Open_Sans } from "next/font/google";
 import { CommerceProvider } from "@/components/commerce-provider";
 import CampaignNavigationLoader from "@/components/campaign-navigation-loader";
