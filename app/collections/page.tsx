@@ -1,6 +1,4 @@
 import Link from "next/link";
-import type { Metadata } from "next";
-export const metadata: Metadata = { title: "Handbag Categories | Zorah", description: "Explore Zorah handbag categories and find leather bags designed for everyday movement, occasions and modern Nigerian style.", alternates: { canonical: "/collections" }, openGraph: { title: "Handbag Categories | Zorah", description: "Explore Zorah handbag categories and find leather bags designed for everyday movement and occasions.", url: "/collections", type: "website" } };
 import { collections } from "@/lib/catalog";
 import { createClient } from "@/lib/supabase/server";
 import { StorefrontHeader } from "@/components/storefront-header";
