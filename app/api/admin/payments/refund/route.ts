@@ -37,7 +37,14 @@ export async function POST(request:Request){
       throw error
     }
     const refundStatus=text(refund?.status,40)||'pending',refundReference=text(refund?.reference||refund?.id,100)||null
-    await admin.from('payments').update({refund_status:refundStatus,refund_reference:refundReference,refunded_amount:already+amount,refunded_at:refundStatus==='processed'?new Date().toISOString():null}).eq('id',payment.id).eq('refund_status','processing')
+    const finalUpdate:Record<string,unknown>={refund_status:refundStatus,refund_reference:refundReference}
+    if(refundStatus==='processed'){
+      finalUpdate.refunded_amount=already+amount
+      finalUpdate.refunded_at=new Date().toISOString()
+    } else {
+      finalUpdate.refunded_at=null
+    }
+    await admin.from('payments').update(finalUpdate).eq('id',payment.id).eq('refund_status','processing')
     await admin.from('admin_audit_logs').insert({actor_id:user.id,actor_role:'order_admin',action:'UPDATE',resource_type:'payment_refund',resource_id:payment.id,result:'success',metadata:{order_id:order.id,order_number:order.order_number,amount,currency:order.currency,refund_status:refundStatus}})
     return NextResponse.json({success:true,status:refundStatus,amount,refundReference})
   }catch(error){console.error('Refund request failed',error);return NextResponse.json({error:'Refund could not be initiated right now. Please try again or reconcile the payment.'},{status:500})}
