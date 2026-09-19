@@ -179,7 +179,6 @@ export async function POST(request: Request) {
         const newRefundedAmount = currentRefunded + refundAmount
         update.refunded_amount = newRefundedAmount
         update.refunded_at = new Date().toISOString()
-        update.status = 'refunded'
 
         const { data: updatedPayment, error: updateError } = await admin
           .from('payments')
@@ -192,10 +191,10 @@ export async function POST(request: Request) {
 
         if (updatedPayment?.order_id) {
           const fullyRefunded = Number(updatedPayment.refunded_amount || 0) >= Number(updatedPayment.amount || 0)
-          await admin.from('orders').update({
-            payment_status: fullyRefunded ? 'refunded' : 'paid',
-            status: fullyRefunded ? 'refunded' : 'processing',
-          }).eq('id', updatedPayment.order_id)
+          await admin.from('payments').update({ status: fullyRefunded ? 'refunded' : 'paid' }).eq('id', payment.id)
+          if (fullyRefunded) {
+            await admin.from('orders').update({ payment_status: 'refunded', status: 'refunded' }).eq('id', updatedPayment.order_id)
+          }
         }
       } else {
         await admin.from('payments').update(update).eq('id', payment.id)
