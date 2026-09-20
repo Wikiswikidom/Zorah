@@ -12,6 +12,22 @@ alter table public.campaigns
 create index if not exists campaigns_channel_status_idx
   on public.campaigns (channel, status, starts_at, ends_at);
 
+drop policy if exists "Anonymous can read active store campaigns" on public.campaigns;
+drop policy if exists "Authenticated staff can read scoped campaigns" on public.campaigns;
+drop policy if exists "Authenticated staff can create scoped campaigns" on public.campaigns;
+drop policy if exists "Authenticated staff can update scoped campaigns" on public.campaigns;
+drop policy if exists "Authenticated staff can delete scoped campaigns" on public.campaigns;
+drop policy if exists "Anonymous can read active store campaign products" on public.campaign_products;
+drop policy if exists "Authenticated staff can read scoped campaign products" on public.campaign_products;
+drop policy if exists "Authenticated staff can insert scoped campaign products" on public.campaign_products;
+drop policy if exists "Authenticated staff can update scoped campaign products" on public.campaign_products;
+drop policy if exists "Authenticated staff can delete scoped campaign products" on public.campaign_products;
+drop policy if exists "Anonymous can read active store campaign collections" on public.campaign_collections;
+drop policy if exists "Authenticated staff can read scoped campaign collections" on public.campaign_collections;
+drop policy if exists "Authenticated staff can insert scoped campaign collections" on public.campaign_collections;
+drop policy if exists "Authenticated staff can update scoped campaign collections" on public.campaign_collections;
+drop policy if exists "Authenticated staff can delete scoped campaign collections" on public.campaign_collections;
+
 drop policy if exists "Anonymous can read active campaigns" on public.campaigns;
 drop policy if exists "Authenticated marketing can create campaigns" on public.campaigns;
 drop policy if exists "Authenticated marketing can delete campaigns" on public.campaigns;
