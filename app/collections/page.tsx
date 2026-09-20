@@ -1,9 +1,21 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { collections } from "@/lib/catalog";
 import { createClient } from "@/lib/supabase/server";
 import { StorefrontHeader } from "@/components/storefront-header";
 import { CategoryBrowser } from "@/components/category-browser";
 import styles from "./page.module.css";
+
+export const metadata: Metadata = {
+  title: "Leather Handbag Collections | Zorah Handbags",
+  description: "Explore Zorah handbag collections in Lagos: leather handbags, crossbody bags, evening bags and contemporary Nigerian leathercraft.",
+  alternates: { canonical: "/collections" },
+  openGraph: {
+    title: "Leather Handbag Collections | Zorah Handbags",
+    description: "Explore Zorah handbag collections in Lagos: leather handbags, crossbody bags, evening bags and contemporary Nigerian leathercraft.",
+    type: "website",
+  },
+};
 
 const fallbackCategories = [
   ...collections,
