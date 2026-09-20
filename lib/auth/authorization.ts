@@ -40,3 +40,24 @@ export async function requireRole(allowedRoles:StaffRole[]){
   if(!allowedRoles.includes(role)&&role!=='super_admin'){adminDenied('/admin');throw new Error('Authorization redirect did not complete')}
   return {user,role}
 }
+
+export async function requireApiRole(allowedRoles: StaffRole[]) {
+  const supabase = await createClient()
+  const { data: userData, error: userError } = await supabase.auth.getUser()
+  const user = userData.user
+  if (userError || !user) return { ok: false as const, status: 401 as const, error: 'Authentication required.' }
+  const { data: accessData, error: accessError } = await supabase
+    .from('profiles')
+    .select('role,is_active')
+    .eq('id', user.id)
+    .maybeSingle()
+  const access = accessData as StaffAccess | null
+  if (accessError || !access?.is_active || !STAFF_ROLES.has(access.role as StaffRole)) {
+    return { ok: false as const, status: 403 as const, error: 'Staff access required.' }
+  }
+  const role = access.role as StaffRole
+  if (role !== 'super_admin' && !allowedRoles.includes(role)) {
+    return { ok: false as const, status: 403 as const, error: 'You do not have permission for this operation.' }
+  }
+  return { ok: true as const, user, role }
+}
