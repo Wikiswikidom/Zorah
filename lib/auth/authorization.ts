@@ -24,14 +24,25 @@ export async function getAuthenticatedUser(){
 
 function adminDenied(next='/admin'){redirect(`/admin-access-denied?next=${encodeURIComponent(next)}`)}
 
-export async function requireStaff(){
-  const supabase=await createClient()
+async function getStaffAccess() {
+  const supabase = await createClient()
   const {data:userData,error:userError}=await supabase.auth.getUser()
   const user=userData.user
-  if(userError||!user){redirect(`/admin-login?next=${encodeURIComponent('/admin')}`);throw new Error('Authentication redirect did not complete')}
+  if(userError||!user)return {supabase,user:null,access:null}
   const {data:accessData,error:accessError}=await supabase.from('profiles').select('role,is_active').eq('id',user.id).maybeSingle()
-  const access=accessData as StaffAccess|null
-  if(accessError||!access?.is_active||!STAFF_ROLES.has(access.role as StaffRole)){adminDenied('/admin');throw new Error('Authorization redirect did not complete')}
+  return {supabase,user,access:accessError?null:accessData as StaffAccess|null}
+}
+
+async function hasAAL2(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const {data,error}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel()
+  return !error && data?.currentLevel === 'aal2'
+}
+
+export async function requireStaff(){
+  const {supabase,user,access}=await getStaffAccess()
+  if(!user){redirect(`/admin-login?next=${encodeURIComponent('/admin')}`);throw new Error('Authentication redirect did not complete')}
+  if(!access?.is_active||!STAFF_ROLES.has(access.role as StaffRole)){adminDenied('/admin');throw new Error('Authorization redirect did not complete')}
+  if(!(await hasAAL2(supabase))){redirect(`/admin-mfa?next=${encodeURIComponent('/admin')}`);throw new Error('MFA redirect did not complete')}
   return {user,role:access.role as StaffRole}
 }
 
@@ -42,18 +53,13 @@ export async function requireRole(allowedRoles:StaffRole[]){
 }
 
 export async function requireApiRole(allowedRoles: StaffRole[]) {
-  const supabase = await createClient()
-  const { data: userData, error: userError } = await supabase.auth.getUser()
-  const user = userData.user
-  if (userError || !user) return { ok: false as const, status: 401 as const, error: 'Authentication required.' }
-  const { data: accessData, error: accessError } = await supabase
-    .from('profiles')
-    .select('role,is_active')
-    .eq('id', user.id)
-    .maybeSingle()
-  const access = accessData as StaffAccess | null
-  if (accessError || !access?.is_active || !STAFF_ROLES.has(access.role as StaffRole)) {
+  const {supabase,user,access}=await getStaffAccess()
+  if (!user) return { ok: false as const, status: 401 as const, error: 'Authentication required.' }
+  if (!access?.is_active || !STAFF_ROLES.has(access.role as StaffRole)) {
     return { ok: false as const, status: 403 as const, error: 'Staff access required.' }
+  }
+  if (!(await hasAAL2(supabase))) {
+    return { ok: false as const, status: 403 as const, error: 'Multi-factor authentication is required for staff access.' }
   }
   const role = access.role as StaffRole
   if (role !== 'super_admin' && !allowedRoles.includes(role)) {
