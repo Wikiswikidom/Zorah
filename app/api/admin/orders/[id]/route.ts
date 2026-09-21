@@ -9,7 +9,7 @@ type OrderStatus = typeof allowedStatuses[number]
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    { const auth = await requireApiRole(['order_admin']); if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status }); }
+    const auth = await requireApiRole(['order_admin']); if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
     const { id } = await params
     const admin = createAdminClient()
     const { data: order, error } = await admin.from('orders').select('id,order_number,user_id,customer_name,email,phone,address_line1,address_line2,city,state,country,subtotal,delivery_fee,total,currency,status,payment_status,paystack_reference,created_at,updated_at,customer_note,terms_accepted_at,terms_version,tracking_number,carrier,shipped_at,delivered_at,cancelled_at,admin_note').eq('id', id).maybeSingle()
@@ -30,7 +30,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const auth = { const auth = await requireApiRole(['order_admin']); if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status }); }; if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status }); const { user } = auth
+    const auth = await requireApiRole(['order_admin']); if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status }); const { user } = auth
     const { id } = await params
     const body = await request.json().catch(() => null)
     if (!body || typeof body !== 'object') return NextResponse.json({ error: 'Invalid order update.' }, { status: 400 })
