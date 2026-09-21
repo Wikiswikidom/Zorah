@@ -39,7 +39,24 @@ const nextConfig: NextConfig = {
         { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
         { key: 'Origin-Agent-Cluster', value: '?1' },
       ],
-    }]
+      },
+      {
+        source: '/api/:path*',
+        headers: [{ key: 'Cache-Control', value: 'no-store, max-age=0' }],
+      },
+      {
+        source: '/admin/:path*',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store, max-age=0' }],
+      },
+      {
+        source: '/account/:path*',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store, max-age=0' }],
+      },
+      {
+        source: '/checkout/:path*',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store, max-age=0' }],
+      },
+    ]
   },
 }
 
