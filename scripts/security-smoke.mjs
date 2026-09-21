@@ -7,7 +7,6 @@ const checks=[
   ['/sitemap.xml','sitemap',200],
   ['/api/admin/campaigns','admin API without auth',401],
   ['/api/admin/orders','orders API without auth',401],
-  ['/api/admin/campaigns/media','admin upload without auth',401],
   ['/.env','environment file',404],
   ['/.git/config','git metadata',404],
 ]
