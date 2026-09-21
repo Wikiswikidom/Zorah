@@ -25,9 +25,8 @@ const nextConfig: NextConfig = {
     return [{ source: '/admin/login', destination: '/admin-login' }]
   },
   async headers() {
-    return [
-      {
-        source: '/(.*)',
+    return [{
+      source: '/(.*)',
       headers: [
         { key: 'Content-Security-Policy', value: csp },
         { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -36,28 +35,8 @@ const nextConfig: NextConfig = {
         { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
         { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(), payment=(self), usb=(), browsing-topics=()' },
         { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-        { key: 'X-DNS-Prefetch-Control', value: 'off' },
-        { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
-        { key: 'Origin-Agent-Cluster', value: '?1' },
       ],
-      },
-      {
-        source: '/api/:path*',
-        headers: [{ key: 'Cache-Control', value: 'no-store, max-age=0' }],
-      },
-      {
-        source: '/admin/:path*',
-        headers: [{ key: 'Cache-Control', value: 'private, no-store, max-age=0' }],
-      },
-      {
-        source: '/account/:path*',
-        headers: [{ key: 'Cache-Control', value: 'private, no-store, max-age=0' }],
-      },
-      {
-        source: '/checkout/:path*',
-        headers: [{ key: 'Cache-Control', value: 'private, no-store, max-age=0' }],
-      },
-    ]
+    }]
   },
 }
 
