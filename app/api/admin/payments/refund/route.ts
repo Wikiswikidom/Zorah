@@ -10,7 +10,7 @@ const text=(v:unknown,max:number)=>typeof v==='string'?v.trim().slice(0,max):''
 
 export async function POST(request:Request){
   try{
-    const{user}={ const auth = await requireApiRole(['order_admin']); if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status }); }
+    const auth = await requireApiRole(['order_admin']); if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status }); const { user } = auth
     const body=await request.json().catch(()=>null) as Record<string,unknown>|null
     const orderId=text(body?.orderId,80),note=text(body?.customerNote,500),merchantNote=text(body?.merchantNote,500)
     const requested=body?.amount===undefined||body?.amount===null||body?.amount===''?undefined:Number(body.amount)
