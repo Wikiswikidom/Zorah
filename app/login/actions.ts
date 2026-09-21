@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { headers } from 'next/headers'
 import { redirect } from 'next/navigation'
 
@@ -46,7 +47,8 @@ export async function signInWithPassword(formData: FormData) {
 
   const { data: { user } } = await supabase.auth.getUser()
   if (user) {
-    const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).maybeSingle()
+    const admin = createAdminClient()
+    const { data: profile } = await admin.from('profiles').select('role,is_active').eq('id', user.id).maybeSingle()
     // Staff identities are deliberately isolated from the customer portal.
     // They must enter through /admin-login; never expose the admin workspace
     // through a normal customer login flow.
