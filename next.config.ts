@@ -51,14 +51,11 @@ const nextConfig: NextConfig = {
         { key: 'X-DNS-Prefetch-Control', value: 'off' },
         { key: 'X-Permitted-Cross-Domain-Policies', value: 'none' },
         { key: 'Origin-Agent-Cluster', value: '?1' },
+        { key: 'X-XSS-Protection', value: '0' },
       ],
       },
       {
-        source: '/(.*)',
-        headers: securityHeaders,
-      },
-      {
-        source: '/api/:path*,
+        source: '/api/:path*',
         headers: [{ key: 'Cache-Control', value: 'no-store, max-age=0' }],
       },
       {
