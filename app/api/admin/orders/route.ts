@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server'
-import { requireRole } from '@/lib/auth/authorization'
+import { requireApiRole } from '@/lib/auth/authorization'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    await requireRole(['order_admin'])
+    const auth = await requireApiRole(['order_admin'])
+    if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status })
     const admin = createAdminClient()
     const { data: orders, error } = await admin.from('orders').select('id,order_number,customer_name,email,phone,total,currency,status,payment_status,paystack_reference,tracking_number,carrier,shipped_at,delivered_at,cancelled_at,created_at,updated_at').order('created_at', { ascending: false }).limit(200)
     if (error) throw error
