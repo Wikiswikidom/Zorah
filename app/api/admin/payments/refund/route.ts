@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireRole } from '@/lib/auth/authorization'
+import { requireApiRole } from '@/lib/auth/authorization'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createPaystackRefund } from '@/lib/payments/paystack'
 
@@ -10,7 +10,7 @@ const text=(v:unknown,max:number)=>typeof v==='string'?v.trim().slice(0,max):''
 
 export async function POST(request:Request){
   try{
-    const{user}=await requireRole(['order_admin'])
+    const{user}={ const auth = await requireApiRole(['order_admin']); if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status }); }
     const body=await request.json().catch(()=>null) as Record<string,unknown>|null
     const orderId=text(body?.orderId,80),note=text(body?.customerNote,500),merchantNote=text(body?.merchantNote,500)
     const requested=body?.amount===undefined||body?.amount===null||body?.amount===''?undefined:Number(body.amount)
