@@ -18,39 +18,8 @@ import "./responsive-ux.css";
 import { Cormorant_Garamond, Open_Sans } from "next/font/google";
 import { CommerceProvider } from "@/components/commerce-provider";
 import CampaignNavigationLoader from "@/components/campaign-navigation-loader";
-import { absoluteUrl, defaultDescription, defaultKeywords, defaultTitle, siteName } from "@/lib/seo";
 
 const display=Cormorant_Garamond({subsets:["latin"],variable:"--font-display",display:"swap"});
 const sans=Open_Sans({subsets:["latin"],variable:"--font-sans",display:"swap"});
-
-export const metadata:Metadata={
-  metadataBase:new URL(absoluteUrl('/')),
-  title:{default:defaultTitle,template:`%s | ${siteName}`},
-  description:defaultDescription,
-  keywords:defaultKeywords,
-  applicationName:siteName,
-  creator:siteName,
-  publisher:siteName,
-  alternates:{canonical:"/landing"},
-  robots:{index:true,follow:true},
-  openGraph:{
-    type:"website",
-    siteName,
-    title:defaultTitle,
-    description:defaultDescription,
-    url:absoluteUrl('/landing'),
-    locale:"en_NG",
-    images:[{url:absoluteUrl('/opengraph-image'),width:1200,height:630,alt:defaultTitle}],
-  },
-  twitter:{
-    card:"summary_large_image",
-    title:defaultTitle,
-    description:defaultDescription,
-    images:[absoluteUrl('/opengraph-image')],
-  },
-  icons:{icon:"/icon"},
-};
-
-export default function RootLayout({children}:{children:React.ReactNode}){
-  return <html lang="en"><body className={`${display.variable} ${sans.variable}`}><CommerceProvider><CampaignNavigationLoader/>{children}</CommerceProvider></body></html>
-}
+export const metadata:Metadata={title:"Zorah Handbags — Crafted to be carried.",description:"Contemporary leather handbags crafted in Lagos with a modern African point of view.",icons:{icon:"/icon"}};
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body className={`${display.variable} ${sans.variable}`}><CommerceProvider><CampaignNavigationLoader/>{children}</CommerceProvider></body></html>}
