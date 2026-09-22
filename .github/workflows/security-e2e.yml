@@ -1,0 +1,36 @@
+name: Authenticated Security E2E
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  security-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Use Node.js 22
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Run authenticated isolation and MFA tests
+        env:
+          ZORAH_SUPABASE_URL: ${{ secrets.ZORAH_SUPABASE_URL }}
+          ZORAH_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.ZORAH_SUPABASE_PUBLISHABLE_KEY }}
+          ZORAH_TEST_CUSTOMER_A_EMAIL: ${{ secrets.ZORAH_TEST_CUSTOMER_A_EMAIL }}
+          ZORAH_TEST_CUSTOMER_A_PASSWORD: ${{ secrets.ZORAH_TEST_CUSTOMER_A_PASSWORD }}
+          ZORAH_TEST_CUSTOMER_B_EMAIL: ${{ secrets.ZORAH_TEST_CUSTOMER_B_EMAIL }}
+          ZORAH_TEST_CUSTOMER_B_PASSWORD: ${{ secrets.ZORAH_TEST_CUSTOMER_B_PASSWORD }}
+          ZORAH_TEST_STAFF_EMAIL: ${{ secrets.ZORAH_TEST_STAFF_EMAIL }}
+          ZORAH_TEST_STAFF_PASSWORD: ${{ secrets.ZORAH_TEST_STAFF_PASSWORD }}
+          ZORAH_TEST_STAFF_TOTP_SECRET: ${{ secrets.ZORAH_TEST_STAFF_TOTP_SECRET }}
+        run: node scripts/security-e2e.mjs
