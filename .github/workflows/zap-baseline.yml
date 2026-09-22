@@ -1,0 +1,25 @@
+name: OWASP ZAP Baseline
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 2 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  zap:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: OWASP ZAP baseline scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: "https://zorah-eight.vercel.app"
+          fail_action: false
+          allow_issue_writing: false
+          artifact_name: zorah-zap-baseline
+          cmd_options: "-a"
