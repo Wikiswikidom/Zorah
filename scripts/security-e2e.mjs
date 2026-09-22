@@ -127,6 +127,27 @@ async function assertNoCrossUserAddressAccess(a, b) {
     await b.supabase.from('customer_addresses').delete().eq('id', addressId)
   }
 
+  const { data: ownOrders, error: ownOrdersError } = await b.supabase
+    .from('orders')
+    .select('id')
+    .limit(1)
+  if (ownOrdersError) throw ownOrdersError
+
+  if (ownOrders?.[0]?.id) {
+    const { data: crossOrder, error: crossOrderError } = await a.supabase
+      .from('orders')
+      .select('id')
+      .eq('id', ownOrders[0].id)
+
+    if (crossOrderError) throw crossOrderError
+    if ((crossOrder || []).length !== 0) {
+      throw new Error('IDOR failure: Customer A can read Customer B order data.')
+    }
+    console.log('PASS customer IDOR isolation: orders')
+  } else {
+    console.log('SKIP order IDOR test: Customer B has no test order')
+  }
+
   console.log('PASS customer IDOR isolation: addresses')
 }
 
