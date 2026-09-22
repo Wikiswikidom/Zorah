@@ -1,4 +1,5 @@
 name: Bootstrap npm lockfile
+# one-time deterministic dependency bootstrap
 
 on:
   push:
