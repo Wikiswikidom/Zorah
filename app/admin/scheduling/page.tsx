@@ -3,7 +3,7 @@ import { requireRole } from '@/lib/auth/authorization'
 import { createClient } from '@/lib/supabase/server'
 
 export default async function AdminSchedulingPage() {
-  await requireRole(['catalog_admin', 'content_admin', 'marketing_admin'])
+  await requireRole(['catalog_admin', 'content_admin', 'marketing_admin', 'operations_admin'])
   const supabase = await createClient()
   const [jobs, campaigns, products, landing, journal] = await Promise.all([
     supabase.from('publishing_jobs').select('id,resource_type,resource_id,action,run_at,status,attempts,last_error').order('run_at', { ascending: true }).limit(100),
