@@ -13,7 +13,7 @@ function safeNextPath(value: FormDataEntryValue | null) {
 function customerNextPath(value: FormDataEntryValue | null) {
   const next = safeNextPath(value)
   const isLanding = next === '/' || next === '/landing' || next.startsWith('/landing/')
-  const isAdmin = next === '/admin' || next.startsWith('/admin/') || next === '/admin-login' || next.startsWith('/admin-login/')
+  const isAdmin = next === '/admin' || next.startsWith('/admin/') || next === '/admin-login' || next.startsWith('/admin-login-zorah/')
   return isLanding || isAdmin ? '/shop' : next
 }
 function loginPath(next: string, error: string) {
