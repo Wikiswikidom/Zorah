@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireRole } from '@/lib/auth/authorization'
 import { createClient } from '@/lib/supabase/server'
+import { getProductPublishCheck } from '@/lib/admin/product-publish-check'
 
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
 const ALLOWED=new Set(['draft','published','archived'])
@@ -17,6 +18,10 @@ export async function PATCH(request:Request,{params}:{params:Promise<{id:string}
   if(when&&Number.isNaN(when.getTime()))return NextResponse.json({error:'Invalid schedule date.'},{status:400})
   if(status==='published'&&when&&when.getTime()<=Date.now())return NextResponse.json({error:'A publish schedule must be in the future.'},{status:400})
   const supabase=await createClient()
+  if(status==='published'){
+    const readiness=await getProductPublishCheck(id)
+    if(!readiness.ready)return NextResponse.json({error:'Product is not ready to publish.',issues:readiness.issues},{status:422})
+  }
   const {data:existing,error:findError}=await supabase.from('products').select('id,status').eq('id',id).single()
   if(findError||!existing)return NextResponse.json({error:'Product not found.'},{status:404})
   const now=new Date().toISOString()
