@@ -1,7 +1,13 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { adminPasswordSignIn } from './actions'
 import { AdminLoginForm } from '@/components/admin/admin-login-form'
 import './page.css'
+
+export const metadata: Metadata = {
+  title: 'Administrator Sign In | Zorah',
+  robots: { index: false, follow: false },
+}
 
 export default async function AdminLoginZorahPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const params = await searchParams
