@@ -21,9 +21,6 @@ const csp = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   crossOrigin: 'anonymous',
-  async rewrites() {
-    return [{ source: '/admin/login', destination: '/admin-login' }]
-  },
   async headers() {
     return [{
       source: '/(.*)',
