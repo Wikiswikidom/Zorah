@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 export type StaffRole =
@@ -42,7 +42,7 @@ export async function requireStaff(){
   const {supabase,user,access}=await getStaffAccess()
   if(!user){notFound();throw new Error('Authentication 404 did not complete')}
   if(!access?.is_active||!STAFF_ROLES.has(access.role as StaffRole)){adminDenied();throw new Error('Authorization 404 did not complete')}
-  if(!(await hasAAL2(supabase))){notFound();throw new Error('MFA 404 did not complete')}
+  if(!(await hasAAL2(supabase))){redirect(`/admin-mfa?next=${encodeURIComponent('/admin')}`);throw new Error('MFA redirect did not complete')}
   return {user,role:access.role as StaffRole}
 }
 
