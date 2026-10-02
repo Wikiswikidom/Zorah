@@ -14,7 +14,7 @@ export default async function AdminMfaPage({ searchParams }: { searchParams: Pro
   const next = safeNext(params.next)
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect(`/admin-login?next=${encodeURIComponent(next)}`)
+  if (!user) redirect(`/admin-login-zorah?next=${encodeURIComponent(next)}`)
 
   const { data: profile } = await supabase.from('profiles').select('role,is_active').eq('id', user.id).maybeSingle()
   if (!profile?.is_active || !roles.has(profile.role)) redirect('/login?error=invalid')
