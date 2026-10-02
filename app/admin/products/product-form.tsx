@@ -8,7 +8,7 @@ type ProductFormValues = { id?: string; name: string; slug: string; short_descri
 type Category = { id: string; name: string }
 type PreviewFile = { file: File; url: string; id: string }
 
-const empty: ProductFormValues = { name: '', slug: '', short_description: '', description: '', base_price: '', status: 'published', is_featured: false, badge: '', seo_title: '', seo_description: '', seo_keywords: '', category_id: '', material: '', dimensions: '', capacity: '', care_instructions: '', delivery_returns: '', features: '' }
+const empty: ProductFormValues = { name: '', slug: '', short_description: '', description: '', base_price: '', status: 'draft', is_featured: false, badge: '', seo_title: '', seo_description: '', seo_keywords: '', category_id: '', material: '', dimensions: '', capacity: '', care_instructions: '', delivery_returns: '', features: '' }
 const blankColour = (): ColourDraft => ({ name: '', hex: '#173D32', price: '', stock: '0', sku: '', available: true, default: false })
 const slugify = (v: string) => v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120)
 const field = 'mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#B08A3C] focus:ring-2 focus:ring-[#B08A3C]/15'
