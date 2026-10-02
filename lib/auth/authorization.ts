@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 export type StaffRole =
@@ -22,7 +22,7 @@ export async function getAuthenticatedUser(){
   return data.user
 }
 
-function adminDenied(next='/admin'){redirect(`/admin-access-denied?next=${encodeURIComponent(next)}`)}
+function adminDenied(){ notFound() }
 
 async function getStaffAccess() {
   const supabase = await createClient()
@@ -40,15 +40,15 @@ async function hasAAL2(supabase: Awaited<ReturnType<typeof createClient>>) {
 
 export async function requireStaff(){
   const {supabase,user,access}=await getStaffAccess()
-  if(!user){redirect(`/admin-login?next=${encodeURIComponent('/admin')}`);throw new Error('Authentication redirect did not complete')}
-  if(!access?.is_active||!STAFF_ROLES.has(access.role as StaffRole)){adminDenied('/admin');throw new Error('Authorization redirect did not complete')}
+  if(!user){notFound();throw new Error('Authentication 404 did not complete')}
+  if(!access?.is_active||!STAFF_ROLES.has(access.role as StaffRole)){adminDenied();throw new Error('Authorization 404 did not complete')}
   if(!(await hasAAL2(supabase))){redirect(`/admin-mfa?next=${encodeURIComponent('/admin')}`);throw new Error('MFA redirect did not complete')}
   return {user,role:access.role as StaffRole}
 }
 
 export async function requireRole(allowedRoles:StaffRole[]){
   const {user,role}=await requireStaff()
-  if(!allowedRoles.includes(role)&&role!=='super_admin'){adminDenied('/admin');throw new Error('Authorization redirect did not complete')}
+  if(!allowedRoles.includes(role)&&role!=='super_admin'){adminDenied();throw new Error('Authorization 404 did not complete')}
   return {user,role}
 }
 

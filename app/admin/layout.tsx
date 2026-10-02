@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { AdminShell } from '@/components/admin/admin-shell'
 import { requireStaff } from '@/lib/auth/authorization'
 import './admin.css'
@@ -10,6 +11,11 @@ import './branding.css'
 import './admin-form-polish.css'
 import './workspace-polish.css'
 import './admin-responsive.css'
+
+export const metadata: Metadata = {
+  title: 'Commerce Studio | Zorah',
+  robots: { index: false, follow: false },
+}
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const { role } = await requireStaff()

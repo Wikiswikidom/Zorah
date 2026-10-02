@@ -21,9 +21,6 @@ const csp = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   crossOrigin: 'anonymous',
-  async rewrites() {
-    return [{ source: '/admin/login', destination: '/admin-login' }]
-  },
   async headers() {
     return [{
       source: '/(.*)',
@@ -40,6 +37,18 @@ const nextConfig: NextConfig = {
         { key: 'Origin-Agent-Cluster', value: '?1' },
         { key: 'X-XSS-Protection', value: '0' },
       ],
+      },
+      {
+        source: '/admin',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store, max-age=0' }],
+      },
+      {
+        source: '/admin-login-zorah/:path*',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store, max-age=0' }],
+      },
+      {
+        source: '/admin-login-zorah',
+        headers: [{ key: 'Cache-Control', value: 'private, no-store, max-age=0' }],
       },
       {
         source: '/api/:path*',

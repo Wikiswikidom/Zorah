@@ -8,7 +8,7 @@ type ProductFormValues = { id?: string; name: string; slug: string; short_descri
 type Category = { id: string; name: string }
 type PreviewFile = { file: File; url: string; id: string }
 
-const empty: ProductFormValues = { name: '', slug: '', short_description: '', description: '', base_price: '', status: 'published', is_featured: false, badge: '', seo_title: '', seo_description: '', seo_keywords: '', category_id: '', material: '', dimensions: '', capacity: '', care_instructions: '', delivery_returns: '', features: '' }
+const empty: ProductFormValues = { name: '', slug: '', short_description: '', description: '', base_price: '', status: 'draft', is_featured: false, badge: '', seo_title: '', seo_description: '', seo_keywords: '', category_id: '', material: '', dimensions: '', capacity: '', care_instructions: '', delivery_returns: '', features: '' }
 const blankColour = (): ColourDraft => ({ name: '', hex: '#173D32', price: '', stock: '0', sku: '', available: true, default: false })
 const slugify = (v: string) => v.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 120)
 const field = 'mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#B08A3C] focus:ring-2 focus:ring-[#B08A3C]/15'
@@ -126,7 +126,7 @@ export default function ProductForm({ initial }: { initial?: ProductFormValues }
     setSaving(true); setUploading(false); setUploadedCount(0)
     try {
       const requestedStatus = form.status
-      const payload = { ...form, name, slug, base_price: price, seo_keywords: form.seo_keywords.split(',').map(x => x.trim()).filter(Boolean), features: form.features.split('\n').map(x => x.trim()).filter(Boolean), status: form.id ? requestedStatus : 'draft' }
+      const payload = { ...form, name, slug, base_price: price, seo_keywords: form.seo_keywords.split(',').map(x => x.trim()).filter(Boolean), features: form.features.split('\n').map(x => x.trim()).filter(Boolean), status: requestedStatus === 'published' ? 'draft' : (form.id ? requestedStatus : 'draft') }
       const res = await fetch(form.id ? `/api/admin/products/${form.id}` : '/api/admin/products', { method: form.id ? 'PATCH' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Could not save product.')
@@ -137,11 +137,15 @@ export default function ProductForm({ initial }: { initial?: ProductFormValues }
         try { await uploadImages(id); await uploadColours(id) }
         catch (uploadError) { await deleteCreatedProduct(id); throw uploadError }
         setUploading(false)
-        if (requestedStatus === 'published') {
-          const publishRes = await fetch(`/api/admin/products/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...payload, status: 'published' }) })
-          const publishData = await publishRes.json().catch(() => ({}))
-          if (!publishRes.ok) throw new Error(publishData.error || 'Product was created but could not be published.')
-        }
+      }
+      if (requestedStatus === 'published') {
+        const publishRes = await fetch(`/api/admin/products/${id}/publishing`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: 'published' }),
+        })
+        const publishData = await publishRes.json().catch(() => ({}))
+        if (!publishRes.ok) throw new Error((publishData.issues?.join(' ') || publishData.error) || 'Product is not ready to publish.')
       }
       router.push(`/admin/products/${id}`); router.refresh()
     } catch (err) { setError(err instanceof Error ? err.message : 'Could not save product.'); setSaving(false); setUploading(false) }

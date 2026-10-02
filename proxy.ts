@@ -25,7 +25,7 @@ function sameOrigin(request: NextRequest) {
 
 function rateLimitConfig(pathname:string){
   if(pathname==='/login'||pathname.startsWith('/login/'))return [8,60_000] as const
-  if(pathname==='/admin-login'||pathname.startsWith('/admin-login/'))return [8,60_000] as const
+  if(pathname==='/admin-login-zorah'||pathname.startsWith('/admin-login-zorah/'))return [8,60_000] as const
   if(pathname==='/checkout'||pathname.startsWith('/checkout/'))return [20,60_000] as const
   if(pathname.startsWith('/api/admin/'))return [120,60_000] as const
   if(pathname.startsWith('/api/paystack/initialize')||pathname.startsWith('/api/paystack/verify'))return [20,60_000] as const
