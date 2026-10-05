@@ -37,6 +37,13 @@ const cases = [
   },
   {
     method: "POST",
+    path: "/api/paystack/webhook",
+    expectedStatus: 413,
+    body: "x".repeat(1_000_001),
+    description: "oversized payment webhook is rejected before parsing",
+  },
+  {
+    method: "POST",
     path: "/api/waitlist",
     expectedStatus: 400,
     origin: base,
