@@ -14,7 +14,8 @@ export function ProductPurchase({ product }: { product: Product }) {
   const [busy, setBusy] = useState(false)
   const selected = product.variantDetails?.find(v => v.label === variant)
   const maxQuantity = selected && selected.stockQuantity > 0 ? Math.min(99, selected.stockQuantity) : 99
-  const canPurchase = selected ? selected.isAvailable : true
+  const hasPublishedPrice = product.price !== "₦—" && Number.isFinite(product.priceValue)
+  const canPurchase = hasPublishedPrice && (selected ? selected.isAvailable : true)
   const waitlisted = isWaitlisted(product.slug)
 
   const add = () => {
