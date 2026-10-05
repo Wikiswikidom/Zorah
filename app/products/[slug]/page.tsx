@@ -15,7 +15,7 @@ export async function generateMetadata({params}:{params:Promise<{slug:string}>})
   const s=await createClient()
   const{data,error}=await s.from('products').select('name,short_description,description,seo_title,seo_description,seo_keywords,status').eq('slug',slug).eq('status','published').maybeSingle()
   if(error)throw error
-  if(!data)return{title:'Product not found | Zorah',robots:{index:false,follow:false}}
+  if(!data)notFound()
   const title=data.seo_title||`${data.name} | Zorah Handbags`
   const description=(data.seo_description||data.short_description||data.description||'Handcrafted leather handbags by Zorah.').slice(0,170)
   return{title,description,keywords:data.seo_keywords,alternates:{canonical:`/products/${slug}`},openGraph:{title,description,type:'website',url:absoluteUrl(`/products/${slug}`)}}
