@@ -20,7 +20,7 @@ const cases = [
     method: "GET",
     path,
     expectedStatus: 404,
-    description: \`unauthenticated admin route is hidden: \${path}\`,
+    description: `unauthenticated admin route is hidden: ${path}`,
   })),
   {
     method: "GET",
@@ -52,11 +52,11 @@ for (const test of cases) {
   const privateOk = /private|no-store/i.test(cacheControl);
   const noSensitivePayload = !/\b(customer email|order total|service_role|secret key)\b/i.test(body);
   const pass = statusOk && privateOk && noSensitivePayload;
-  console.log(\`\${pass ? "PASS" : "FAIL"} \${test.description} -> HTTP \${response.status}\`);
+  console.log(`${pass ? "PASS" : "FAIL"} ${test.description} -> HTTP ${response.status}`);
   if (!pass) {
-    console.error(\`  expected HTTP \${test.expectedStatus}, private/no-store cache headers, and no sensitive payload\`);
+    console.error(`  expected HTTP ${test.expectedStatus}, private/no-store cache headers, and no sensitive payload`);
     failed++;
   }
 }
 if (failed) process.exit(1);
-console.log(\`Phase 3 unauthenticated security smoke passed: \${cases.length} cases\`);
+console.log(`Phase 3 unauthenticated security smoke passed: ${cases.length} cases`);
