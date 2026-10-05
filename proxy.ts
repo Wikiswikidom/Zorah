@@ -31,7 +31,7 @@ function rateLimitConfig(pathname:string){
 }
 
 export async function proxy(request: NextRequest) {
-  if (!sameOrigin(request)) return NextResponse.json({ error: 'Cross-origin state-changing requests are not allowed.' }, { status: 403 })
+  if (!sameOrigin(request)) return NextResponse.json({ error: 'Cross-origin state-changing requests are not allowed.' }, { status: 403, headers: { 'Cache-Control': 'no-store' } })
   if(request.method!=='GET'&&request.method!=='HEAD'&&request.method!=='OPTIONS'){
     const config=rateLimitConfig(request.nextUrl.pathname)
     if(config){
