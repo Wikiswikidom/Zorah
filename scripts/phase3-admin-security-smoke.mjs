@@ -35,6 +35,22 @@ const cases = [
     body: JSON.stringify({ event: "charge.success", data: { reference: "phase3-invalid-signature" } }),
     description: "unsigned payment webhook is rejected",
   },
+  {
+    method: "POST",
+    path: "/api/waitlist",
+    expectedStatus: 400,
+    origin: base,
+    body: JSON.stringify({ slug: "not a valid slug" }),
+    description: "same-origin state-changing request reaches input validation",
+  },
+  {
+    method: "POST",
+    path: "/api/waitlist",
+    expectedStatus: 403,
+    origin: "https://attacker.invalid",
+    body: JSON.stringify({ slug: "not a valid slug" }),
+    description: "cross-origin state-changing request is rejected",
+  },
 ];
 
 let failed = 0;
@@ -43,7 +59,7 @@ for (const test of cases) {
     method: test.method,
     redirect: "manual",
     cache: "no-store",
-    headers: test.body ? { "content-type": "application/json" } : undefined,
+    headers: test.body ? { "content-type": "application/json", ...(test.origin ? { origin: test.origin } : {}) } : undefined,
     body: test.body,
   });
   const body = await response.text();
