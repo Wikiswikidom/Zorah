@@ -55,8 +55,8 @@ export function AdminGlobalSearch() {
       {open && results.length > 0 && (
         <div className="zorah-admin-search-results" role="listbox">
           {results.map(([label, href]) => (
-            <button key={href} type="button" onClick={() => { router.push(href); setOpen(false); setQuery(""); }}>
-              <span>{label}</span><span>↗</span>
+            <button key={href} type="button" disabled={isPending} onClick={() => navigate(href)}>
+              <span>{label}</span><span>{isPending ? "…" : "↗"}</span>
             </button>
           ))}
         </div>
