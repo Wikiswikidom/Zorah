@@ -1,5 +1,8 @@
 const rawBase = process.env.BASE_URL || "http://localhost:3000";
 const base = rawBase.endsWith("/") ? rawBase.slice(0, -1) : rawBase;
+const bypassHeaders = process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+  ? { "x-vercel-protection-bypass": process.env.VERCEL_AUTOMATION_BYPASS_SECRET }
+  : {};
 const pages = [
   { path: "/", marker: "Zorah Handbags", description: "root route resolves without a runtime error" },
   { path: "/landing", marker: "Carry your point of view", description: "landing page renders its primary message" },
@@ -52,7 +55,7 @@ const apiCases = [
 let failed = 0;
 async function runPage(test) {
   try {
-    const response = await fetch(base + test.path, { cache: "no-store" });
+    const response = await fetch(base + test.path, { cache: "no-store", headers: bypassHeaders });
     const body = await response.text();
     const pass = response.status === 200 && body.toLowerCase().includes(test.marker.toLowerCase()) &&
       !/application error|internal server error|unhandled runtime error/i.test(body);
@@ -74,6 +77,7 @@ async function runApi(test) {
       redirect: "manual",
       cache: "no-store",
       headers: {
+        ...bypassHeaders,
         ...(test.body ? { "content-type": "application/json" } : {}),
         ...(test.origin ? { origin: test.origin } : {}),
       },
