@@ -10,7 +10,7 @@ const pages = [
   { path: "/collections", marker: "Categories", description: "collections page renders" },
   { path: "/cart", marker: "Cart", description: "cart page renders" },
   { path: "/products/zorah-watch", marker: "Zorah Watch", description: "published product detail renders" },
-  { path: "/products/aurelia", marker: "We couldn't find that page", description: "unpublished placeholder products stay hidden" },
+  { path: "/products/aurelia", marker: "We couldn't find that page", expectedStatus: 404, description: "unpublished placeholder products return a real 404" },
   { path: "/terms-and-conditions", marker: "Terms", description: "terms page renders" },
 ];
 
@@ -58,11 +58,11 @@ async function runPage(test) {
   try {
     const response = await fetch(base + test.path, { cache: "no-store", headers: bypassHeaders });
     const body = await response.text();
-    const pass = response.status === 200 && body.toLowerCase().includes(test.marker.toLowerCase()) &&
+    const pass = response.status === (test.expectedStatus ?? 200) && body.toLowerCase().includes(test.marker.toLowerCase()) &&
       !/application error|internal server error|unhandled runtime error/i.test(body);
     console.log(`${pass ? "PASS" : "FAIL"} ${test.description} -> HTTP ${response.status}`);
     if (!pass) {
-      console.error(`  expected HTTP 200 and visible marker: ${test.marker}`);
+      console.error(`  expected HTTP ${test.expectedStatus ?? 200} and visible marker: ${test.marker}`);
       failed++;
     }
   } catch (error) {
