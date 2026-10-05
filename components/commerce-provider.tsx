@@ -253,7 +253,7 @@ export function CommerceProvider({ children }: { children: React.ReactNode }) {
     const v = String(variant).slice(0, 100);
     setCart(current => {
       const index = current.findIndex(item => item.product.slug === product.slug && item.variant === v);
-      const next = index < 0 ? { product, quantity: q, variant: v } : { ...current[index], quantity: Math.min(MAX_QUANTITY, current[index].quantity + q) };
+      const next = index < 0 ? { product, quantity: q, variant: v } : { ...current[index], product, quantity: Math.min(MAX_QUANTITY, current[index].quantity + q) };
       if (index < 0 && current.length >= MAX_CART_ITEMS) return current;
       if (userId) void syncCartItem(userId, next);
       return index < 0 ? [...current, next] : current.map((item, i) => i === index ? next : item);
