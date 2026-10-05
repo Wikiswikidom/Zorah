@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 const targets = [
@@ -21,44 +21,88 @@ const targets = [
   ["Audit", "/admin/audit", "audit history activity"],
 ] as const;
 
+type EntityResult = { kind: string; label: string; detail: string; href: string };
+
 export function AdminGlobalSearch() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const [entityResults, setEntityResults] = useState<EntityResult[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   function navigate(href: string) {
     setOpen(false);
     setQuery("");
     startTransition(() => router.push(href));
   }
-  const results = useMemo(() => {
+  const moduleResults = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     return targets.filter(([label, , keywords]) => `${label} ${keywords}`.toLowerCase().includes(q)).slice(0, 6);
   }, [query]);
 
+  useEffect(() => {
+    const q = query.trim();
+    if (q.length < 2) {
+      setEntityResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const response = await fetch("/api/admin/search?q=" + encodeURIComponent(q), {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error("Search unavailable");
+        const data = await response.json();
+        setEntityResults(Array.isArray(data.results) ? data.results : []);
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          setEntityResults([]);
+        }
+      } finally {
+        if (!controller.signal.aborted) setIsSearching(false);
+      }
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timer);
+      controller.abort();
+    };
+  }, [query]);
+
+  const results = useMemo(() => [
+    ...moduleResults.map(([label, href]) => ({ kind: "Workspace", label, detail: "Open workspace section", href })),
+    ...entityResults,
+  ].slice(0, 8), [moduleResults, entityResults]);
+
   return (
     <div className="zorah-admin-global-search">
-      <span aria-hidden>{isPending ? <span className="zorah-action-spinner" /> : "⌕"}</span>
+      <span aria-hidden>{isPending || isSearching ? <span className="zorah-action-spinner" /> : "⌕"}</span>
       <input
         value={query}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(Boolean(query.trim()))}
         onKeyDown={(e) => {
           if (e.key === "Escape") { setOpen(false); setQuery(""); }
-          if (e.key === "Enter" && results[0]) { navigate(results[0][1]); }
+          if (e.key === "Enter" && results[0]) { navigate(results[0].href); }
         }}
-        placeholder={isPending ? "Opening workspace…" : "Search admin sections…"}
+        placeholder={isPending ? "Opening workspace…" : isSearching ? "Searching…" : "Search products, orders, customers…"}
         aria-label="Search admin workspace"
       />
-      {open && results.length > 0 && (
-        <div className="zorah-admin-search-results" role="listbox">
-          {results.map(([label, href]) => (
-            <button key={href} type="button" disabled={isPending} onClick={() => navigate(href)}>
-              <span>{label}</span><span>{isPending ? "…" : "↗"}</span>
+      {open && (results.length > 0 || isSearching) && (
+        <div className="zorah-admin-search-results" role="listbox" aria-busy={isSearching}>
+          {results.map((result) => (
+            <button key={result.kind + ":" + result.href} type="button" disabled={isPending} onClick={() => navigate(result.href)}>
+              <span><strong>{result.label}</strong><small>{result.detail}</small></span><span>{isPending ? "…" : "↗"}</span>
             </button>
           ))}
+          {isSearching && <p role="status">Searching secure workspace records…</p>}
         </div>
       )}
     </div>
