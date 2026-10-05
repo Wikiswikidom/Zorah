@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { requireApiRole } from "@/lib/auth/authorization";
 
 export const dynamic = "force-dynamic";
@@ -62,16 +63,18 @@ export async function GET(request: NextRequest) {
   }
 
   if (isSuperAdmin || role === "support_admin") {
-    const { data, error } = await supabase.from("profiles")
-      .select("id,full_name,email")
+    // Use the existing server-only admin client only after staff/MFA authorization.
+    // Search and return minimal profile fields; never expose Auth credentials.
+    const admin = createAdminClient();
+    const { data, error } = await admin.from("profiles")
+      .select("id,full_name")
       .eq("role", "customer")
-      .or("full_name.ilike." + pattern + ",email.ilike." + pattern)
+      .ilike("full_name", pattern)
       .order("created_at", { ascending: false }).limit(5);
     if (error) return unavailable();
     for (const customer of data ?? []) {
-      const label = customer.full_name || customer.email || "Zorah customer";
-      const filter = customer.email || customer.full_name || query;
-      results.push({ kind: "Customer", label, detail: customer.email || "Customer account", href: "/admin/customers?q=" + encodeURIComponent(filter) });
+      const label = customer.full_name || "Zorah customer";
+      results.push({ kind: "Customer", label, detail: "Customer profile", href: "/admin/customers?q=" + encodeURIComponent(label) });
     }
   }
 
