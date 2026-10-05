@@ -48,13 +48,38 @@ export async function PUT(request:Request,{params}:{params:Promise<{id:string}>}
 
 export async function DELETE(_request:Request,{params}:{params:Promise<{id:string}>}){
   try{
-    await requireRole(['content_admin','marketing_admin'])
-    const{id}=await params
-    if(!/^[0-9a-f-]{36}$/i.test(id))return errorResponse('Invalid section ID.')
-    const supabase=createAdminClient()
-    const{error}=await supabase.from('landing_sections').delete().eq('id',id)
-    if(error)return errorResponse('Could not delete section.',400)
-    revalidatePath('/');revalidatePath('/landing')
-    return NextResponse.json({ok:true})
-  }catch(error){console.error('Landing CMS DELETE failed',error);return errorResponse(error instanceof Error?error.message:'Unable to delete landing section.',500)}
+    await requireRole(['content_admin','marketing_admin']);
+    const{id}=await params;
+    if(!/^[0-9a-f-]{36}$/i.test(id))return errorResponse('Invalid section ID.');
+    const supabase=createAdminClient();
+    const{data:existing,error:lookupError}=await supabase.from('landing_sections').select('id,media_path').eq('id',id).maybeSingle();
+    if(lookupError)return errorResponse('Could not inspect section media before deletion.',500);
+    if(!existing)return errorResponse('Landing section not found.',404);
+    const{error}=await supabase.from('landing_sections').delete().eq('id',id);
+    if(error)return errorResponse('Could not delete section.',400);
+
+    let storageCleanupFailed=false;
+    const path=existing.media_path;
+    if(path&&!/^https?:\/\//i.test(path)){
+      if((!path.startsWith('landing/')&&!path.startsWith('campaigns/'))||path.split('/').includes('..')){
+        storageCleanupFailed=true;
+      }else{
+        const[{count:campaignRefs,error:campaignRefError},{count:sectionRefs,error:sectionRefError}]=await Promise.all([
+          supabase.from('campaigns').select('id',{count:'exact',head:true}).eq('media_path',path),
+          supabase.from('landing_sections').select('id',{count:'exact',head:true}).eq('media_path',path),
+        ]);
+        if(campaignRefError||sectionRefError){
+          storageCleanupFailed=true;
+        }else if((campaignRefs??0)===0&&(sectionRefs??0)===0){
+          const{error:storageError}=await supabase.storage.from('landing-media').remove([path]);
+          storageCleanupFailed=Boolean(storageError);
+        }
+      }
+    }
+    revalidatePath('/');revalidatePath('/landing');
+    return NextResponse.json({ok:true,storageCleanupFailed});
+  }catch(error){
+    console.error('Landing CMS DELETE failed',error);
+    return errorResponse(error instanceof Error?error.message:'Unable to delete landing section.',500);
+  }
 }
