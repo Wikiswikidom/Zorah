@@ -253,7 +253,7 @@ export function CommerceProvider({ children }: { children: React.ReactNode }) {
     const v = String(variant).slice(0, 100);
     setCart(current => {
       const index = current.findIndex(item => item.product.slug === product.slug && item.variant === v);
-      const next = index < 0 ? { product, quantity: q, variant: v } : { ...current[index], quantity: Math.min(MAX_QUANTITY, current[index].quantity + q) };
+      const next = index < 0 ? { product, quantity: q, variant: v } : { ...current[index], product, quantity: Math.min(MAX_QUANTITY, current[index].quantity + q) };
       if (index < 0 && current.length >= MAX_CART_ITEMS) return current;
       if (userId) void syncCartItem(userId, next);
       return index < 0 ? [...current, next] : current.map((item, i) => i === index ? next : item);
@@ -294,7 +294,7 @@ export function CommerceProvider({ children }: { children: React.ReactNode }) {
         if (!productId) return;
         try {
           if (exists) await supabase.from("customer_wishlists").delete().eq("user_id", userId).eq("product_id", productId);
-          else await supabase.from("customer_wishlists").upsert({ user_id: userId, product_id: productId }, { onConflict: "user_id,product_id" });
+          else { const { error } = await supabase.from("customer_wishlists").insert({ user_id: userId, product_id: productId }); if (error && error.code !== "23505") console.error("Wishlist insert failed", error); }
         } catch (error) { console.error("Wishlist sync failed", error); }
       })();
       return next;

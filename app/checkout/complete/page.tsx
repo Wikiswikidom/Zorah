@@ -2,9 +2,12 @@
 import {useEffect,useState} from 'react'
 import Link from 'next/link'
 import {StorefrontHeader} from '@/components/storefront-header'
+import {useCommerce} from '@/components/commerce-provider'
 
 export default function CheckoutComplete(){
+ const{clearBag}=useCommerce()
  const[status,setStatus]=useState<'checking'|'paid'|'pending'|'failed'>('checking');const[reference,setReference]=useState('')
+ useEffect(()=>{if(status==='paid')clearBag()},[status,clearBag])
  useEffect(()=>{
   const ref=new URLSearchParams(window.location.search).get('reference')||new URLSearchParams(window.location.search).get('trxref')||'';setReference(ref)
   if(!ref){setStatus('failed');return}

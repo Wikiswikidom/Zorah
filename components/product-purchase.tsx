@@ -14,13 +14,20 @@ export function ProductPurchase({ product }: { product: Product }) {
   const [busy, setBusy] = useState(false)
   const selected = product.variantDetails?.find(v => v.label === variant)
   const maxQuantity = selected && selected.stockQuantity > 0 ? Math.min(99, selected.stockQuantity) : 99
-  const canPurchase = selected ? selected.isAvailable : true
+  const hasPublishedPrice = product.price !== "₦—" && Number.isFinite(product.priceValue)
+  const selectedPriceValue = selected?.priceValue ?? product.priceValue
+  const currencyLabel = product.price.split(" ")[0] || "NGN"
+  const displayPrice = product.price === "₦—" ? product.price : `${currencyLabel} ${selectedPriceValue.toLocaleString("en-NG")}`
+  const canPurchase = hasPublishedPrice && (selected ? selected.isAvailable : true)
   const waitlisted = isWaitlisted(product.slug)
 
   const add = () => {
     if (!canPurchase || busy) return
     setBusy(true); setMessage("")
-    addToBag(product, Math.min(quantity, maxQuantity), variant)
+    const cartProduct = selected
+      ? { ...product, priceValue: selectedPriceValue, price: displayPrice }
+      : product
+    addToBag(cartProduct, Math.min(quantity, maxQuantity), variant)
     setAdded(true)
     window.setTimeout(() => setAdded(false), 1800)
     window.setTimeout(() => setBusy(false), 300)
@@ -35,6 +42,7 @@ export function ProductPurchase({ product }: { product: Product }) {
   }
 
   return <div className="buy-panel">
+    <p className="product-price" aria-live="polite">{displayPrice}</p>
     <div className="variant-picker"><span className="picker-label">Colour</span><div className="variant-options">{product.variants.map(option => { const detail = product.variantDetails?.find(v => v.label === option); const unavailable = detail ? !detail.isAvailable : false; return <button type="button" key={option} disabled={unavailable || busy} className={variant === option ? "variant-option is-selected" : "variant-option"} onClick={() => { setVariant(option); setQuantity(1); setMessage("") }} aria-pressed={variant === option} aria-disabled={unavailable}>{option}{unavailable ? " · Unavailable" : ""}</button> })}</div></div>
     {selected && <p className="purchase-availability" role="status">{selected.isMadeToOrder ? "Made to order — we will confirm production timing with you." : selected.stockQuantity > 0 ? `${selected.stockQuantity} available` : "Unavailable"}</p>}
     <div className="purchase-row"><div className="quantity-control" aria-label="Quantity"><button type="button" disabled={busy || quantity <= 1} onClick={() => setQuantity(q => Math.max(1, q - 1))} aria-label="Decrease quantity">−</button><span>{quantity}</span><button type="button" disabled={busy || quantity >= maxQuantity} onClick={() => setQuantity(q => Math.min(maxQuantity, q + 1))} aria-label="Increase quantity">+</button></div><button type="button" className="button button-dark add-button" disabled={!canPurchase || busy} onClick={add}>{busy ? <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}><LoadingSpinner label="Adding to bag" size={15} />Adding…</span> : added ? "Added to bag ✓" : canPurchase ? "Add to bag" : "Unavailable"}</button></div>
