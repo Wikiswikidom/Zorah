@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 const targets = [
@@ -25,6 +25,13 @@ export function AdminGlobalSearch() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  function navigate(href: string) {
+    setOpen(false);
+    setQuery("");
+    startTransition(() => router.push(href));
+  }
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
@@ -33,16 +40,16 @@ export function AdminGlobalSearch() {
 
   return (
     <div className="zorah-admin-global-search">
-      <span aria-hidden>⌕</span>
+      <span aria-hidden>{isPending ? <span className="zorah-action-spinner" /> : "⌕"}</span>
       <input
         value={query}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
         onFocus={() => setOpen(Boolean(query.trim()))}
         onKeyDown={(e) => {
           if (e.key === "Escape") { setOpen(false); setQuery(""); }
-          if (e.key === "Enter" && results[0]) { router.push(results[0][1]); setOpen(false); setQuery(""); }
+          if (e.key === "Enter" && results[0]) { navigate(results[0][1]); }
         }}
-        placeholder="Search orders, products, customers…"
+        placeholder={isPending ? "Opening workspace…" : "Search admin sections…"}
         aria-label="Search admin workspace"
       />
       {open && results.length > 0 && (
