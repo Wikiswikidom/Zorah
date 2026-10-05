@@ -15,13 +15,19 @@ export function ProductPurchase({ product }: { product: Product }) {
   const selected = product.variantDetails?.find(v => v.label === variant)
   const maxQuantity = selected && selected.stockQuantity > 0 ? Math.min(99, selected.stockQuantity) : 99
   const hasPublishedPrice = product.price !== "₦—" && Number.isFinite(product.priceValue)
+  const selectedPriceValue = selected?.priceValue ?? product.priceValue
+  const currencyLabel = product.price.split(/\s+/)[0] || "NGN"
+  const displayPrice = product.price === "₦—" ? product.price : `${currencyLabel} ${selectedPriceValue.toLocaleString("en-NG")}`
   const canPurchase = hasPublishedPrice && (selected ? selected.isAvailable : true)
   const waitlisted = isWaitlisted(product.slug)
 
   const add = () => {
     if (!canPurchase || busy) return
     setBusy(true); setMessage("")
-    addToBag(product, Math.min(quantity, maxQuantity), variant)
+    const cartProduct = selected
+      ? { ...product, priceValue: selectedPriceValue, price: displayPrice }
+      : product
+    addToBag(cartProduct, Math.min(quantity, maxQuantity), variant)
     setAdded(true)
     window.setTimeout(() => setAdded(false), 1800)
     window.setTimeout(() => setBusy(false), 300)
