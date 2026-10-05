@@ -33,6 +33,9 @@ export default async function AdminProductsPage({searchParams}:{searchParams:Pro
     <section className="product-centre-content">
       <div className="product-centre-hero"><div><p className="product-centre-kicker">Catalogue management</p><h1>Products</h1><p>Build and maintain the live Zorah catalogue. Add products, photography, variants, pricing and stock from one workspace.</p></div><Link href="/admin/products/new" className="add-product-button"><span>＋</span> Add product</Link></div>
       <div className="product-centre-stats"><div><span>Total products</span><strong>{count??0}</strong></div><div><span>Published</span><strong>{published}</strong></div><div><span>Drafts</span><strong>{drafts}</strong></div><div><span>Featured</span><strong>{rows.filter(x=>x.is_featured).length}</strong></div></div>
+      {p.message === 'deleted' && <div role="status" className="catalogue-feedback catalogue-feedback-success">Product deleted. Its database record was removed and associated image cleanup completed.</div>}
+      {p.message === 'deleted_storage_cleanup_failed' && <div role="alert" className="catalogue-feedback catalogue-feedback-warning">The product record was deleted, but one or more image files could not be removed from Supabase Storage. Please retry cleanup before uploading duplicate media.</div>}
+      {p.error === 'delete_failed' && <div role="alert" className="catalogue-feedback catalogue-feedback-error">The product could not be deleted. It may be referenced by existing records. Nothing else should be deleted to force this through.</div>}
       <div className="product-centre-toolbar"><ProductCatalogueFilters total={count??0}/></div>
       <div className="product-list-card">
         <div className="product-list-heading"><div><span>CATALOGUE</span><h2>All products</h2></div><Link href="/admin/products/new" className="small-add">＋ New product</Link></div>
