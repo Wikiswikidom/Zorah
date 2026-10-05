@@ -18,7 +18,7 @@ async function readBoundedBody(request: Request): Promise<string | null> {
     if (done) break
     size += value.byteLength
     if (size > MAX_WEBHOOK_BODY_BYTES) {
-      await reader.cancel()
+      await reader.cancel().catch(() => {})
       return null
     }
     chunks.push(value)
