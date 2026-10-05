@@ -16,22 +16,13 @@ function PendingContents({ children, pendingLabel }: { children: ReactNode; pend
 
   return (
     <>
-      {pending ? (
-        <span
-          aria-hidden="true"
-          className="zorah-action-spinner"
-        />
-      ) : null}
+      {pending ? <span aria-hidden="true" className="zorah-action-spinner" /> : null}
       <span>{pending ? pendingLabel : children}</span>
     </>
   );
 }
 
-/**
- * Submit button for consequential admin actions.
- * Confirmation happens before the form submits; pending state prevents repeat clicks
- * while the server action is running.
- */
+/** Confirm consequential actions and prevent duplicate submissions while pending. */
 export function ConfirmSubmitButton({
   children,
   confirmMessage,
@@ -39,17 +30,21 @@ export function ConfirmSubmitButton({
   className,
   disabled = false,
 }: ConfirmSubmitButtonProps) {
+  const { pending } = useFormStatus();
+
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
-    if (!window.confirm(confirmMessage)) {
+    if (pending) {
       event.preventDefault();
+      return;
     }
+    if (!window.confirm(confirmMessage)) event.preventDefault();
   };
 
   return (
     <button
       type="submit"
       onClick={handleClick}
-      disabled={disabled}
+      disabled={disabled || pending}
       className={className}
       aria-live="polite"
     >
