@@ -10,3 +10,5 @@
 /* Phase 2: consistent feedback for consequential admin actions. */
 .zorah-action-spinner{display:inline-block;width:12px;height:12px;flex:none;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:zorah-action-spin .7s linear infinite;margin-right:7px;vertical-align:-2px}@keyframes zorah-action-spin{to{transform:rotate(360deg)}}
 .zorah-confirm-delete-button:disabled{opacity:.6;cursor:wait;transform:none}
+
+.catalogue-feedback{margin-top:12px;padding:13px 16px;border:1px solid;border-radius:10px;font-size:12px;line-height:1.5}.catalogue-feedback-success{background:#edf6ef;border-color:#b8d9bf;color:#215a31}.catalogue-feedback-warning{background:#fff7e7;border-color:#e6ca8a;color:#765116}.catalogue-feedback-error{background:#fff0f0;border-color:#e8bcbc;color:#8b2525}
