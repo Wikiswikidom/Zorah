@@ -37,7 +37,10 @@ function text(value: unknown, max = 160) {
 }
 
 export async function POST(request: Request) {
-  const rawBody = await request.text()
+  const rawBody = await readBoundedBody(request)
+  if (rawBody === null) {
+    return NextResponse.json({ error: 'Webhook payload is too large.' }, { status: 413, headers: { 'Cache-Control': 'no-store' } })
+  }
   if (!verifyPaystackSignature(rawBody, request.headers.get('x-paystack-signature'))) {
     return NextResponse.json({ error: 'Invalid signature.' }, { status: 401 })
   }
