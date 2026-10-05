@@ -36,6 +36,7 @@ export default async function AdminProductsPage({searchParams}:{searchParams:Pro
       {p.message === 'deleted' && <div role="status" className="catalogue-feedback catalogue-feedback-success">Product deleted. Its database record was removed and associated image cleanup completed.</div>}
       {p.message === 'deleted_storage_cleanup_failed' && <div role="alert" className="catalogue-feedback catalogue-feedback-warning">The product record was deleted, but one or more image files could not be removed from Supabase Storage. Please retry cleanup before uploading duplicate media.</div>}
       {p.error === 'delete_failed' && <div role="alert" className="catalogue-feedback catalogue-feedback-error">The product could not be deleted. It may be referenced by existing records. Nothing else should be deleted to force this through.</div>}
+      {p.error === 'media_lookup_failed' && <div role="alert" className="catalogue-feedback catalogue-feedback-error">Product deletion was stopped because its image records could not be checked. No product record was deleted. Refresh and retry, or ask an administrator to investigate.</div>}
       <div className="product-centre-toolbar"><ProductCatalogueFilters total={count??0}/></div>
       <div className="product-list-card">
         <div className="product-list-heading"><div><span>CATALOGUE</span><h2>All products</h2></div><Link href="/admin/products/new" className="small-add">＋ New product</Link></div>
