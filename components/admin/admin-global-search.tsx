@@ -30,6 +30,7 @@ export function AdminGlobalSearch() {
   const [isPending, startTransition] = useTransition();
   const [entityResults, setEntityResults] = useState<EntityResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState(false);
 
   function navigate(href: string) {
     setOpen(false);
@@ -44,15 +45,16 @@ export function AdminGlobalSearch() {
 
   useEffect(() => {
     const q = query.trim();
+    setEntityResults([]);
+    setSearchError(false);
     if (q.length < 2) {
-      setEntityResults([]);
       setIsSearching(false);
       return;
     }
 
+    setIsSearching(true);
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
-      setIsSearching(true);
       try {
         const response = await fetch("/api/admin/search?q=" + encodeURIComponent(q), {
           cache: "no-store",
@@ -64,6 +66,7 @@ export function AdminGlobalSearch() {
       } catch (error) {
         if (!(error instanceof DOMException && error.name === "AbortError")) {
           setEntityResults([]);
+          setSearchError(true);
         }
       } finally {
         if (!controller.signal.aborted) setIsSearching(false);
@@ -103,6 +106,7 @@ export function AdminGlobalSearch() {
             </button>
           ))}
           {isSearching && <p role="status">Searching secure workspace records…</p>}
+          {searchError && <p role="alert">Search is temporarily unavailable. Try again in a moment.</p>}
         </div>
       )}
     </div>
