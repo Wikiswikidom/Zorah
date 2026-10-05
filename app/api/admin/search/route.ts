@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: access.error }, { status: access.status, headers: { "Cache-Control": "private, no-store" } });
   }
 
-  const query = (request.nextUrl.searchParams.get("q") ?? "").trim().replace(/[%,_]/g, "").slice(0, 80);
+  const query = (request.nextUrl.searchParams.get("q") ?? "").trim().replace(new RegExp("[^a-zA-Z0-9\\s@.'+-]", "g"), "").slice(0, 80);
   if (query.length < 2) {
     return NextResponse.json({ results: [] }, { headers: { "Cache-Control": "private, no-store" } });
   }
