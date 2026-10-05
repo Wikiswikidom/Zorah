@@ -10,6 +10,7 @@ const pages = [
   { path: "/collections", marker: "Categories", description: "collections page renders" },
   { path: "/cart", marker: "Cart", description: "cart page renders" },
   { path: "/products/zorah-watch", marker: "Zorah Watch", description: "published product detail renders" },
+  { path: "/products/aurelia", marker: "We couldn't find that page", description: "unpublished placeholder products stay hidden" },
   { path: "/terms-and-conditions", marker: "Terms", description: "terms page renders" },
 ];
 
