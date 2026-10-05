@@ -6,6 +6,32 @@ import { verifyPaystackSignature, verifyPaystackTransaction } from '@/lib/paymen
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+const MAX_WEBHOOK_BODY_BYTES = 1_000_000
+
+async function readBoundedBody(request: Request): Promise<string | null> {
+  const reader = request.body?.getReader()
+  if (!reader) return ''
+  const chunks: Uint8Array[] = []
+  let size = 0
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    size += value.byteLength
+    if (size > MAX_WEBHOOK_BODY_BYTES) {
+      await reader.cancel()
+      return null
+    }
+    chunks.push(value)
+  }
+  const bytes = new Uint8Array(size)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new TextDecoder().decode(bytes)
+}
+
 function text(value: unknown, max = 160) {
   return typeof value === 'string' ? value.trim().slice(0, max) : ''
 }
