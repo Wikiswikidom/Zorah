@@ -15,6 +15,7 @@ const apiCases = [
     method: "POST",
     path: "/api/checkout",
     body: { items: [] },
+    origin: base,
     expectedStatus: 401,
     description: "checkout rejects unauthenticated requests before creating orders",
   },
