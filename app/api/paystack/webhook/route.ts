@@ -6,12 +6,41 @@ import { verifyPaystackSignature, verifyPaystackTransaction } from '@/lib/paymen
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
+const MAX_WEBHOOK_BODY_BYTES = 1_000_000
+
+async function readBoundedBody(request: Request): Promise<string | null> {
+  const reader = request.body?.getReader()
+  if (!reader) return ''
+  const chunks: Uint8Array[] = []
+  let size = 0
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    size += value.byteLength
+    if (size > MAX_WEBHOOK_BODY_BYTES) {
+      await reader.cancel().catch(() => {})
+      return null
+    }
+    chunks.push(value)
+  }
+  const bytes = new Uint8Array(size)
+  let offset = 0
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset)
+    offset += chunk.byteLength
+  }
+  return new TextDecoder().decode(bytes)
+}
+
 function text(value: unknown, max = 160) {
   return typeof value === 'string' ? value.trim().slice(0, max) : ''
 }
 
 export async function POST(request: Request) {
-  const rawBody = await request.text()
+  const rawBody = await readBoundedBody(request)
+  if (rawBody === null) {
+    return NextResponse.json({ error: 'Webhook payload is too large.' }, { status: 413, headers: { 'Cache-Control': 'no-store' } })
+  }
   if (!verifyPaystackSignature(rawBody, request.headers.get('x-paystack-signature'))) {
     return NextResponse.json({ error: 'Invalid signature.' }, { status: 401 })
   }

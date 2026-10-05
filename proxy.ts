@@ -5,14 +5,11 @@ import { rateLimit, requestIp } from '@/lib/security/rate-limit'
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
 const CSRF_EXEMPT_PATHS = new Set(['/api/paystack/webhook'])
 
-function originFromRequest(request: NextRequest) {
-  const configured = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '')
-  return configured || request.nextUrl.origin
-}
-
 function sameOrigin(request: NextRequest) {
   if (CSRF_EXEMPT_PATHS.has(request.nextUrl.pathname) || SAFE_METHODS.has(request.method)) return true
-  const target = originFromRequest(request)
+  // Compare against the origin actually serving this request. A fixed canonical
+  // URL breaks same-origin form submissions on Vercel preview deployments.
+  const target = request.nextUrl.origin
   const origin = request.headers.get('origin')
   if (origin) return origin === target
   const referer = request.headers.get('referer')
@@ -34,7 +31,7 @@ function rateLimitConfig(pathname:string){
 }
 
 export async function proxy(request: NextRequest) {
-  if (!sameOrigin(request)) return NextResponse.json({ error: 'Cross-origin state-changing requests are not allowed.' }, { status: 403 })
+  if (!sameOrigin(request)) return NextResponse.json({ error: 'Cross-origin state-changing requests are not allowed.' }, { status: 403, headers: { 'Cache-Control': 'no-store' } })
   if(request.method!=='GET'&&request.method!=='HEAD'&&request.method!=='OPTIONS'){
     const config=rateLimitConfig(request.nextUrl.pathname)
     if(config){
