@@ -73,7 +73,9 @@ for (const test of cases) {
   const cacheControl = response.headers.get("cache-control") || "";
   const statusOk = response.status === test.expectedStatus;
   const privateOk = /private|no-store/i.test(cacheControl);
-  const noSensitivePayload = !/\b(customer email|order total|service_role|secret key)\b/i.test(body);
+  const leaksStructuredData = /"(?:results|orders|customers|profiles|payments|email|total|user_id)"\s*:/i.test(body);
+  const leaksEmailAddress = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.test(body);
+  const noSensitivePayload = !leaksStructuredData && !leaksEmailAddress && !body.includes("service_role");
   const pass = statusOk && privateOk && noSensitivePayload;
   console.log(`${pass ? "PASS" : "FAIL"} ${test.description} -> HTTP ${response.status}`);
   if (!pass) {
