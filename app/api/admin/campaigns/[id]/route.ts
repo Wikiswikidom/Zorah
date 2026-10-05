@@ -10,4 +10,39 @@ const href=(v:unknown)=>{const value=text(v,240);return!value||(/^\/(?!\/)[^\s]*
 const errorResponse=(message:string,status=400)=>NextResponse.json({error:message},{status})
 function parse(body:unknown){if(!body||typeof body!=='object'||Array.isArray(body))return{error:'Invalid request.'};const b=body as Record<string,unknown>;const name=text(b.name,120),slug=text(b.slug,120),title=text(b.title,240),campaign_type=text(b.campaign_type,30),status=text(b.status,20)||'draft',placement=text(b.placement,20)||'landing',discount_type=text(b.discount_type,20)||'none',cta_href=href(b.cta_href);if(name.length<2||!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)||title.length<2||!types.has(campaign_type)||!statuses.has(status)||!placements.has(placement)||!discounts.has(discount_type))return{error:'Check the campaign name, slug, type, status, placement and discount.'};if(cta_href===undefined)return{error:'CTA link must be an internal path beginning with /.'};const priority=typeof b.priority==='number'?Math.floor(b.priority):Number(b.priority??0);if(!Number.isSafeInteger(priority)||priority<0||priority>10000)return{error:'Invalid campaign priority.'};const discount_value=b.discount_value===null||b.discount_value===undefined||b.discount_value===''?null:Number(b.discount_value);if(discount_value!==null&&(!Number.isFinite(discount_value)||discount_value<0||(discount_type==='percentage'&&discount_value>100)))return{error:'Invalid discount value.'};const starts_at=b.starts_at?new Date(String(b.starts_at)):null,ends_at=b.ends_at?new Date(String(b.ends_at)):null;if((starts_at&&Number.isNaN(starts_at.getTime()))||(ends_at&&Number.isNaN(ends_at.getTime())))return{error:'Invalid campaign dates.'};if(starts_at&&ends_at&&ends_at<=starts_at)return{error:'Campaign end time must be after its start time.'};if(status==='live'&&starts_at&&starts_at>new Date())return{error:'A live campaign cannot start in the future.'};if(discount_type==='none'&&discount_value!==null)return{error:'A campaign without a discount cannot have a discount value.'};return{data:{name,slug,campaign_type,status,title,message:text(b.message,2000)||null,cta_label:text(b.cta_label,80)||null,cta_href,media_path:text(b.media_path,500)||null,placement,priority,starts_at:starts_at?.toISOString()??null,ends_at:ends_at?.toISOString()??null,show_countdown:b.show_countdown===true,discount_type,discount_value}}}
 export async function PUT(request:Request,{params}:{params:Promise<{id:string}>}){try{const{user}=await requireRole(['marketing_admin','ads_admin','content_admin']);const{id}=await params;if(!/^[0-9a-f-]{36}$/i.test(id))return errorResponse('Invalid campaign ID.');if(!request.headers.get('content-type')?.toLowerCase().includes('application/json'))return errorResponse('JSON request required.',415);const parsed=parse(await request.json().catch(()=>null));if(!('data'in parsed))return errorResponse(parsed.error??'Invalid request.');const parsedData=parsed.data;if(!parsedData)return errorResponse('Invalid campaign payload.',500);const s=createAdminClient();const{data:existing}=await s.from('campaigns').select('id').eq('id',id).maybeSingle();if(!existing)return errorResponse('Campaign not found.',404);const{error}=await s.from('campaigns').update({...parsedData,updated_by:user.id,published_at:parsedData.status==='live'?new Date().toISOString():null}).eq('id',id);if(error)return errorResponse(error.code==='23505'?'A campaign with this slug already exists.':'Could not update campaign.',error.code==='23505'?409:400);return NextResponse.json({ok:true})}catch(error){console.error('Campaign PUT failed',error);return errorResponse('Unable to update campaign.',500)}}
-export async function DELETE(_request:Request,{params}:{params:Promise<{id:string}>}){try{await requireRole(['marketing_admin','ads_admin','content_admin']);const{id}=await params;if(!/^[0-9a-f-]{36}$/i.test(id))return errorResponse('Invalid campaign ID.');const s=createAdminClient();const{error}=await s.from('campaigns').delete().eq('id',id);if(error)return errorResponse('Could not delete campaign.',400);return NextResponse.json({ok:true})}catch(error){console.error('Campaign DELETE failed',error);return errorResponse('Unable to delete campaign.',500)}}
+export async function DELETE(_request:Request,{params}:{params:Promise<{id:string}>}){
+  try{
+    await requireRole(['marketing_admin','ads_admin','content_admin']);
+    const{id}=await params;
+    if(!/^[0-9a-f-]{36}$/i.test(id))return errorResponse('Invalid campaign ID.');
+    const s=createAdminClient();
+    const{data:existing,error:lookupError}=await s.from('campaigns').select('id,media_path').eq('id',id).maybeSingle();
+    if(lookupError)return errorResponse('Could not inspect campaign media before deletion.',500);
+    if(!existing)return errorResponse('Campaign not found.',404);
+    const{error}=await s.from('campaigns').delete().eq('id',id);
+    if(error)return errorResponse('Could not delete campaign.',400);
+
+    let storageCleanupFailed=false;
+    const path=existing.media_path;
+    if(path&&!/^https?:\/\//i.test(path)){
+      if((!path.startsWith('campaigns/')&&!path.startsWith('landing/'))||path.split('/').includes('..')){
+        storageCleanupFailed=true;
+      }else{
+        const[{count:campaignRefs,error:campaignRefError},{count:sectionRefs,error:sectionRefError}]=await Promise.all([
+          s.from('campaigns').select('id',{count:'exact',head:true}).eq('media_path',path),
+          s.from('landing_sections').select('id',{count:'exact',head:true}).eq('media_path',path),
+        ]);
+        if(campaignRefError||sectionRefError){
+          storageCleanupFailed=true;
+        }else if((campaignRefs??0)===0&&(sectionRefs??0)===0){
+          const{error:storageError}=await s.storage.from('landing-media').remove([path]);
+          storageCleanupFailed=Boolean(storageError);
+        }
+      }
+    }
+    return NextResponse.json({ok:true,storageCleanupFailed});
+  }catch(error){
+    console.error('Campaign DELETE failed',error);
+    return errorResponse('Unable to delete campaign.',500);
+  }
+}
