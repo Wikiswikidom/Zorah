@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "test:phase1": "node scripts/phase1-route-smoke.mjs",
     "test:phase2": "node scripts/phase2-search-smoke.mjs",
-    "test:phase3": "node scripts/phase3-admin-security-smoke.mjs"
+    "test:phase3": "node scripts/phase3-admin-security-smoke.mjs",
+    "test:phase4": "node scripts/phase4-customer-platform-smoke.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.7",
