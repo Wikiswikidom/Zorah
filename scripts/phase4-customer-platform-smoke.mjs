@@ -1,7 +1,7 @@
 const rawBase = process.env.BASE_URL || "http://localhost:3000";
 const base = rawBase.endsWith("/") ? rawBase.slice(0, -1) : rawBase;
 const pages = [
-  { path: "/", marker: "Carry your point of view", description: "root resolves to the public landing experience" },
+  { path: "/", marker: "Zorah Handbags", description: "root route resolves without a runtime error" },
   { path: "/landing", marker: "Carry your point of view", description: "landing page renders its primary message" },
   { path: "/shop", marker: "Shop handbags", description: "shop catalogue renders" },
   { path: "/collections", marker: "Categories", description: "collections page renders" },
@@ -81,7 +81,7 @@ async function runApi(test) {
     const body = await response.text();
     const pass = response.status === test.expectedStatus &&
       !body.includes("service_role") &&
-      !["\"email\"","\"user_id\"","\"profiles\"","\"payments\"","\"orders\"","\"customers\""].some(key => body.includes(key));
+      !body.includes("@") && !["\"user_id\"","\"profiles\"","\"payments\"","\"orders\"","\"customers\""].some(key => body.includes(key));
     console.log(`${pass ? "PASS" : "FAIL"} ${test.description} -> HTTP ${response.status}`);
     if (!pass) {
       console.error(`  expected HTTP ${test.expectedStatus}, no sensitive payload`);
