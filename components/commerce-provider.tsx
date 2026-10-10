@@ -154,13 +154,22 @@ export function CommerceProvider({ children }: { children: React.ReactNode }) {
         } as CartItem;
       }).filter((item): item is CartItem => item !== null);
 
+      // The server cart is authoritative for signed-in customers. The per-user
+      // localStorage cart is only a mirror of that same data, so adding it to
+      // remote quantities on every hydration caused quantities to double on
+      // every refresh. Merge only the guest cart during sign-in, then remove
+      // the guest key below; never add the signed-in mirror to the server cart.
       const mergedCart = [...remoteCart];
-      for (const item of [...localCart, ...guestCart]) {
+      for (const item of guestCart) {
         const index = mergedCart.findIndex(x => x.product.slug === item.product.slug && x.variant === item.variant);
         if (index < 0) mergedCart.push(item);
         else mergedCart[index] = { ...mergedCart[index], quantity: Math.min(MAX_QUANTITY, mergedCart[index].quantity + item.quantity) };
       }
-      const limitedCart = await hydrateCartImages(mergedCart.slice(0, MAX_CART_ITEMS));
+      // If the server cart query failed, preserve the local mirror instead of
+      // unexpectedly showing an empty bag. In that case avoid writing an empty
+      // result back to the server (handled by checking cartResult.error below).
+      const resolvedCart = cartResult.error ? [...localCart, ...guestCart] : mergedCart;
+      const limitedCart = await hydrateCartImages(resolvedCart.slice(0, MAX_CART_ITEMS));
       const mergedWishlist = [...new Set([...serverWishlist, ...localWishlist, ...guestWishlist])].filter(isSafeSlug).slice(0, 200);
       const mergedWaitlist = [...new Set([...serverWaitlist, ...localWaitlist, ...guestWaitlist])].filter(isSafeSlug).slice(0, 200);
 
@@ -168,10 +177,12 @@ export function CommerceProvider({ children }: { children: React.ReactNode }) {
       setWishlist(mergedWishlist);
       setWaitlist(mergedWaitlist);
 
-      await Promise.all(limitedCart.map(item => supabase.from("customer_cart").upsert({
-        user_id: id, product_slug: item.product.slug, variant: item.variant,
-        quantity: item.quantity, product_snapshot: item.product,
-      }, { onConflict: "user_id,product_slug,variant" })));
+      if (!cartResult.error) {
+        await Promise.all(limitedCart.map(item => supabase.from("customer_cart").upsert({
+          user_id: id, product_slug: item.product.slug, variant: item.variant,
+          quantity: item.quantity, product_snapshot: item.product,
+        }, { onConflict: "user_id,product_slug,variant" })));
+      }
 
       for (const slug of [...new Set([...localWishlist, ...guestWishlist])]) {
         const productId = await productIdForSlug(slug);
