@@ -168,7 +168,11 @@ export function CommerceProvider({ children }: { children: React.ReactNode }) {
       // If the server cart query failed, preserve the local mirror instead of
       // unexpectedly showing an empty bag. In that case avoid writing an empty
       // result back to the server (handled by checking cartResult.error below).
-      const resolvedCart = cartResult.error ? [...localCart, ...guestCart] : mergedCart;
+      const resolvedCart = cartResult.error
+        ? [...localCart, ...guestCart]
+        : remoteCart.length === 0
+          ? [...localCart, ...guestCart]
+          : mergedCart;
       const limitedCart = await hydrateCartImages(resolvedCart.slice(0, MAX_CART_ITEMS));
       const mergedWishlist = [...new Set([...serverWishlist, ...localWishlist, ...guestWishlist])].filter(isSafeSlug).slice(0, 200);
       const mergedWaitlist = [...new Set([...serverWaitlist, ...localWaitlist, ...guestWaitlist])].filter(isSafeSlug).slice(0, 200);
