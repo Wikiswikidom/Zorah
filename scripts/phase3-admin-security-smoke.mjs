@@ -30,6 +30,28 @@ const cases = [
   },
   {
     method: "POST",
+    path: "/api/admin/products",
+    expectedStatus: 401,
+    origin: base,
+    body: JSON.stringify({}),
+    description: "direct product-admin API access is denied without staff authentication",
+  },
+  {
+    method: "POST",
+    path: "/api/checkout",
+    expectedStatus: 401,
+    origin: base,
+    body: JSON.stringify({ items: [] }),
+    description: "checkout cannot be started without customer authentication",
+  },
+  {
+    method: "GET",
+    path: "/api/checkout/verify?reference=phase3-security-probe",
+    expectedStatus: 401,
+    description: "payment verification cannot be used without customer authentication",
+  },
+  {
+    method: "POST",
     path: "/api/paystack/webhook",
     expectedStatus: 401,
     body: JSON.stringify({ event: "charge.success", data: { reference: "phase3-invalid-signature" } }),
@@ -41,6 +63,14 @@ const cases = [
     expectedStatus: 413,
     body: "x".repeat(1_000_001),
     description: "oversized payment webhook is rejected before parsing",
+  },
+  {
+    method: "POST",
+    path: "/api/waitlist",
+    expectedStatus: 400,
+    origin: base,
+    body: "{",
+    description: "malformed same-origin waitlist JSON is rejected",
   },
   {
     method: "POST",
@@ -83,5 +113,21 @@ for (const test of cases) {
     failed++;
   }
 }
+
+const page = await fetch(base + "/landing", { redirect: "manual", cache: "no-store" });
+for (const [header, pattern] of [
+  ["content-security-policy", /default-src 'self'/i],
+  ["x-content-type-options", /^nosniff$/i],
+  ["x-frame-options", /^DENY$/i],
+  ["referrer-policy", /^strict-origin-when-cross-origin$/i],
+  ["strict-transport-security", /max-age=/i],
+  ["permissions-policy", /camera=\(\)/i],
+]) {
+  const value = page.headers.get(header) || "";
+  const pass = pattern.test(value);
+  console.log(`${pass ? "PASS" : "FAIL"} security response header: ${header}`);
+  if (!pass) failed++;
+}
+
 if (failed) process.exit(1);
-console.log(`Phase 3 unauthenticated security smoke passed: ${cases.length} cases`);
+console.log(`Phase 3 security smoke passed: ${cases.length} HTTP cases plus security headers`);
