@@ -13,10 +13,13 @@ export async function GET(request:Request){
     if(!user)return NextResponse.json({error:'Please sign in before verifying payment.'},{status:401})
     const reference=new URL(request.url).searchParams.get('reference')?.trim()
     if(!reference||reference.length>100)return NextResponse.json({error:'Invalid payment reference.'},{status:400})
+    const admin=createAdminClient()
+    // Confirm ownership before making an outbound Paystack request; this avoids
+    // allowing arbitrary authenticated users to probe transaction references.
+    const{data:order,error:orderError}=await admin.from('orders').select('id,order_number,user_id,total,currency,payment_status,status').eq('order_number',reference).eq('user_id',user.id).maybeSingle()
+    if(orderError||!order)return NextResponse.json({error:'Payment could not be verified.'},{status:404})
     const verification=await verifyPaystackTransaction(reference)
     if(!verification.configured)return NextResponse.json({paid:false,status:'unconfigured',setupRequired:true})
-    const admin=createAdminClient();const{data:order,error:orderError}=await admin.from('orders').select('id,order_number,user_id,total,currency,payment_status,status').eq('order_number',reference).eq('user_id',user.id).maybeSingle()
-    if(orderError||!order)return NextResponse.json({error:'Payment could not be verified.'},{status:404})
     const payment=verification.data;const status=typeof payment?.status==='string'?payment.status:'unknown';const expectedAmount=Math.round(Number(order.total)*100)
     const paid=!!(verification.ok&&status==='success'&&payment?.reference===reference&&Number(payment.amount)===expectedAmount&&payment.currency===order.currency)
     if(paid){
