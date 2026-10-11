@@ -1,6 +1,7 @@
 type Bucket={count:number;resetAt:number}
 const buckets=new Map<string,Bucket>()
 const MAX_BUCKETS=5000
+
 export function rateLimit(key:string,limit:number,windowMs:number){
  const now=Date.now()
  const current=buckets.get(key)
@@ -14,7 +15,16 @@ export function rateLimit(key:string,limit:number,windowMs:number){
  if(current.count>limit)return{allowed:false,retryAfter:Math.max(1,Math.ceil((current.resetAt-now)/1000))}
  return{allowed:true,retryAfter:0}
 }
+
+/**
+ * Prefer the platform-provided client IP header. The left-most X-Forwarded-For
+ * value can be supplied by the caller on some proxy chains, so do not trust it
+ * ahead of the edge-provided address.
+ */
 export function requestIp(request:Request){
+ const realIp=request.headers.get('x-real-ip')?.trim()
+ if(realIp)return realIp
  const forwarded=request.headers.get('x-forwarded-for')
- return forwarded?.split(',')[0]?.trim()||request.headers.get('x-real-ip')||'unknown'
+ const chain=forwarded?.split(',').map(value=>value.trim()).filter(Boolean)
+ return chain?.at(-1)||'unknown'
 }
