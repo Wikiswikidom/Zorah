@@ -18,8 +18,40 @@ import "./responsive-ux.css";
 import { Cormorant_Garamond, Open_Sans } from "next/font/google";
 import { CommerceProvider } from "@/components/commerce-provider";
 import CampaignNavigationLoader from "@/components/campaign-navigation-loader";
+import { getSiteUrl, siteName, defaultTitle, defaultDescription } from "@/lib/seo";
 
-const display=Cormorant_Garamond({subsets:["latin"],variable:"--font-display",display:"swap"});
-const sans=Open_Sans({subsets:["latin"],variable:"--font-sans",display:"swap"});
-export const metadata:Metadata={title:"Zorah Handbags — Crafted to be carried.",description:"Contemporary leather handbags crafted in Lagos with a modern African point of view.",icons:{icon:"/icon"}};
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body className={`${display.variable} ${sans.variable}`}><CommerceProvider><CampaignNavigationLoader/>{children}</CommerceProvider></body></html>}
+const display = Cormorant_Garamond({ subsets: ["latin"], variable: "--font-display", display: "swap" });
+const sans = Open_Sans({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+
+export const metadata: Metadata = {
+  metadataBase: new URL(getSiteUrl()),
+  title: defaultTitle,
+  description: defaultDescription,
+  applicationName: siteName,
+  icons: { icon: "/icon" },
+  openGraph: {
+    type: "website",
+    siteName,
+    title: defaultTitle,
+    description: defaultDescription,
+    url: getSiteUrl(),
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: defaultTitle,
+    description: defaultDescription,
+  },
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className={`${display.variable} ${sans.variable}`}>
+        <CommerceProvider>
+          <CampaignNavigationLoader />
+          {children}
+        </CommerceProvider>
+      </body>
+    </html>
+  );
+}
