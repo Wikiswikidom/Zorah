@@ -9,7 +9,7 @@ const pages = [
   { path: "/shop", marker: "Shop handbags", description: "shop catalogue renders" },
   { path: "/collections", marker: "Categories", description: "collections page renders" },
   { path: "/cart", marker: "Cart", description: "cart page renders" },
-  { path: "/products/zorah-watch", marker: "Zorah Watch", description: "published product detail renders" },
+  ...(process.env.PUBLISHED_PRODUCT_SLUG ? [{ path: `/products/${encodeURIComponent(process.env.PUBLISHED_PRODUCT_SLUG)}`, marker: process.env.PUBLISHED_PRODUCT_MARKER || process.env.PUBLISHED_PRODUCT_SLUG, description: "published product detail renders" }] : []),
   { path: "/products/aurelia", marker: "We couldn't find that page", description: "unpublished placeholder products stay hidden" },
   { path: "/terms-and-conditions", marker: "Terms", description: "terms page renders" },
 ];
@@ -53,6 +53,8 @@ async function request(path, init = {}) {
     headers: { ...bypassHeaders, ...(init.headers || {}) },
   });
 }
+
+if (!process.env.PUBLISHED_PRODUCT_SLUG) console.log("SKIP published product detail check: set PUBLISHED_PRODUCT_SLUG and PUBLISHED_PRODUCT_MARKER for the target database.");
 
 for (const test of pages) {
   try {
