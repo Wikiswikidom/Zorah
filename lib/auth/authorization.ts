@@ -46,9 +46,13 @@ export async function requireStaff(){
   return {user,role:access.role as StaffRole}
 }
 
+export function hasFullAdminAccess(role: StaffRole | string) {
+  return role === 'super_admin' || role === 'operations_admin'
+}
+
 export async function requireRole(allowedRoles:StaffRole[]){
   const {user,role}=await requireStaff()
-  if(!allowedRoles.includes(role)&&role!=='super_admin'){adminDenied();throw new Error('Authorization 404 did not complete')}
+  if(!allowedRoles.includes(role)&&!hasFullAdminAccess(role)){adminDenied();throw new Error('Authorization 404 did not complete')}
   return {user,role}
 }
 
@@ -62,7 +66,7 @@ export async function requireApiRole(allowedRoles: StaffRole[]) {
     return { ok: false as const, status: 403 as const, error: 'Multi-factor authentication is required for staff access.' }
   }
   const role = access.role as StaffRole
-  if (role !== 'super_admin' && !allowedRoles.includes(role)) {
+  if (!hasFullAdminAccess(role) && !allowedRoles.includes(role)) {
     return { ok: false as const, status: 403 as const, error: 'You do not have permission for this operation.' }
   }
   return { ok: true as const, user, role }
