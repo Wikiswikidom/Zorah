@@ -13,7 +13,7 @@ export default async function AdminTermsPage(){
       <div className="zorah-content-intro">
         <span className="zorah-content-kicker">Legal & customer trust</span>
         <h1>Terms & Conditions</h1>
-        <p>Maintain the customer-facing terms used at checkout. Super Admins and Content Admins can edit and publish this page; checkout records the published version accepted by each customer.</p>
+        <p>Maintain the customer-facing terms used at checkout. Super Admins, General Operations Admins and Content Admins can edit and publish this page; checkout records the published version accepted by each customer.</p>
       </div>
       <LegalPageEditor/>
     </section>
