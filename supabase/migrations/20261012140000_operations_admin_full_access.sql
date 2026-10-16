@@ -13,9 +13,8 @@ AS $function$
     WHERE id = (SELECT auth.uid())
       AND is_active = true
       AND (
-        role = 'super_admin'::user_role
+        role IN ('super_admin'::user_role, 'operations_admin'::user_role)
         OR role = required_role
-        OR (role = 'operations_admin'::user_role AND required_role = 'super_admin'::user_role)
       )
   );
 $function$;
