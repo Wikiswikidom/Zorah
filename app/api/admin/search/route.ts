@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { requireApiRole } from "@/lib/auth/authorization";
+import { hasFullAdminAccess, requireApiRole } from "@/lib/auth/authorization";
 
 export const dynamic = "force-dynamic";
 
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   const pattern = "%" + query + "%";
   const results: SearchResult[] = [];
   const role = access.role;
-  const isSuperAdmin = role === "super_admin";
+  const isSuperAdmin = hasFullAdminAccess(role);
 
   if (isSuperAdmin || role === "catalog_admin") {
     const { data, error } = await supabase.from("products")

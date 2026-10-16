@@ -33,7 +33,7 @@ export async function updateAdminRole(formData: FormData) {
 
   await supabase.from('admin_audit_logs').insert({
     actor_id: actor.id,
-    actor_role: 'super_admin',
+    actor_role: actor.role,
     action: 'UPDATE_STAFF_ACCESS',
     resource_type: 'profile',
     resource_id: userId,

@@ -63,7 +63,7 @@ export async function createStaffAccount(formData: FormData) {
   // Deliberately never record the password in the audit trail, URL, logs, or database.
   await supabase.from('admin_audit_logs').insert({
     actor_id: actor.id,
-    actor_role: 'super_admin',
+    actor_role: actor.role,
     action: 'CREATE_STAFF_ACCOUNT',
     resource_type: 'auth_user',
     resource_id: userId,
