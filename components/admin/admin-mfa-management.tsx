@@ -27,6 +27,7 @@ export function AdminMfaManagement() {
   const [code, setCode] = useState('')
   const [message, setMessage] = useState('')
   const [error, setError] = useState('')
+  const [ownerFreshLoginConfirmed, setOwnerFreshLoginConfirmed] = useState(false)
 
   const reloadFactors = useCallback(async () => {
     const result = await supabase.auth.mfa.listFactors()
@@ -104,7 +105,15 @@ export function AdminMfaManagement() {
       setError('For safety, Zorah will not remove the last verified authenticator factor.')
       return
     }
-    if (!window.confirm('Remove this authenticator from the account? Do this only after the owner has verified their own phone and confirmed it works. This cannot be undone.')) return
+    if (factor.friendly_name === 'Zorah Owner Authenticator') {
+      setError('For safety, this page will not remove the authenticator labelled for the owner. Select the previous authenticator only after confirming the owner’s independent login.')
+      return
+    }
+    if (!ownerFreshLoginConfirmed) {
+      setError('First confirm that the owner has completed a fresh sign-in using their own authenticator.')
+      return
+    }
+    if (!window.confirm('Final safety check: has the owner completed a fresh sign-in using their own phone, and can they reach the Super Admin dashboard? Remove the selected previous authenticator only if both are true. This cannot be undone.')) return
     setBusy(true); setError(''); setMessage('')
     const { error: removeError } = await supabase.auth.mfa.unenroll({ factorId: factor.id })
     if (removeError) {
@@ -116,6 +125,7 @@ export function AdminMfaManagement() {
     try {
       await reloadFactors()
       setMessage('The selected authenticator was removed. Confirm that the owner’s authenticator is the remaining verified factor before signing out.')
+      setOwnerFreshLoginConfirmed(false)
     } catch {
       setError('The factor was removed, but the list could not refresh. Reload this page and verify the remaining factor before signing out.')
     }
@@ -152,11 +162,17 @@ export function AdminMfaManagement() {
                   </div>
                   <div className="flex items-center gap-3">
                     {factor.status === 'verified' && <span className="text-xs font-semibold text-emerald-800">Verified</span>}
-                    {factor.status === 'verified' && verifiedCount > 1 && <button type="button" disabled={busy} onClick={() => void removeOldFactor(factor)} className="rounded-lg border border-red-700/20 px-3 py-2 text-xs text-red-800 disabled:opacity-40">Remove factor</button>}
+                    {factor.status === 'verified' && verifiedCount > 1 && factor.friendly_name !== 'Zorah Owner Authenticator' && <button type="button" disabled={busy || !ownerFreshLoginConfirmed} onClick={() => void removeOldFactor(factor)} className="rounded-lg border border-red-700/20 px-3 py-2 text-xs text-red-800 disabled:opacity-40">Remove previous factor</button>}
                   </div>
                 </li>
               ))}
             </ul>
+          )}
+          {verifiedCount > 1 && factors.some((factor) => factor.status === 'verified' && factor.friendly_name === 'Zorah Owner Authenticator') && (
+            <label className="mt-5 flex items-start gap-3 rounded-xl border border-amber-700/20 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+              <input type="checkbox" checked={ownerFreshLoginConfirmed} onChange={(event) => setOwnerFreshLoginConfirmed(event.target.checked)} className="mt-1" />
+              <span>I confirm the owner has signed out and completed a fresh login using the authenticator on their own phone, and can access the Super Admin dashboard.</span>
+            </label>
           )}
           {!enrollment && <button type="button" disabled={busy || loading} onClick={() => void startEnrollment()} className="mt-5 rounded-xl bg-[#173d32] px-5 py-3 text-sm font-semibold text-white disabled:opacity-40">{busy ? 'Please wait…' : 'Add owner authenticator'}</button>}
         </section>
