@@ -64,7 +64,7 @@ export function AdminMfaManagement() {
   }
 
   async function verifyEnrollment() {
-    if (!enrollment || !/^\\d{6}$/.test(code)) {
+    if (!enrollment || !/^\d{6}$/.test(code)) {
       setError('Enter the current six-digit code shown by the owner’s authenticator app.')
       return
     }
@@ -172,7 +172,7 @@ export function AdminMfaManagement() {
             <code className="mt-3 block break-all rounded-lg bg-black/5 p-3 text-xs">{enrollment.secret}</code>
           </details>
           <label htmlFor="owner-mfa-code" className="mt-5 block text-xs font-semibold">Six-digit code from the owner’s phone</label>
-          <input id="owner-mfa-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\\D/g, '').slice(0, 6))} className="mt-2 w-full max-w-sm rounded-xl border border-black/15 px-4 py-3 text-center text-2xl tracking-[.35em]" placeholder="000000" />
+          <input id="owner-mfa-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} value={code} onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))} className="mt-2 w-full max-w-sm rounded-xl border border-black/15 px-4 py-3 text-center text-2xl tracking-[.35em]" placeholder="000000" />
           <button type="button" disabled={busy || code.length !== 6} onClick={() => void verifyEnrollment()} className="mt-4 block rounded-xl bg-[#173d32] px-5 py-3 text-sm font-semibold text-white disabled:opacity-40">{busy ? 'Verifying…' : 'Verify owner authenticator'}</button>
           <button type="button" disabled={busy} onClick={() => { setEnrollment(null); setCode(''); setError(''); setMessage('Enrollment cancelled. Existing authenticators were not removed.') }} className="mt-4 text-sm text-black/55 underline">Cancel setup</button>
         </section>}
